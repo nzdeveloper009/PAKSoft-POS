@@ -107,11 +107,24 @@ Fakes over mocks. No network or real database in unit tests. Test names describe
 
 ## Before you say a task is done
 
+Gradle needs JDK 17 (the default `java` on this Mac is newer), so every Gradle command carries the `JAVA_HOME` prefix.
+
 ```bash
-./gradlew allTests
-./gradlew :androidApp:assembleDebug
-./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64   # iOS compiles
+# Tests in every module: iosSimulatorArm64Test + testAndroidHostTest
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew allTests
+# Tests in one module
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew :<module>:iosSimulatorArm64Test
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew :<module>:testAndroidHostTest
+
+# Android app builds
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew :androidApp:assembleDebug
+# iOS framework links
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
+# iOS app builds (expect "** BUILD SUCCEEDED **")
+xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' -derivedDataPath build/ios build | tail -3
 ```
+
+iOS simulator tests run on "iPhone 17 Pro"; pass `-Ppos.iosTestDevice="<simulator name>"` to use another. The Xcode project is generated from `iosApp/project.yml`: after editing it, run `cd iosApp && xcodegen generate` and commit the regenerated project.
 
 Report what you ran and its result. If something wasn't run (no simulator, no network), say so. For UI work, run the app and look at the screen; for POS math, include the golden test results.
 

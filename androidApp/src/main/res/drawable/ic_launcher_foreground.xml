@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A receipt with a torn bottom edge; the printed lines are cut out so the background shows through. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M38,30H70V78L66,74L62,78L58,74L54,78L50,74L46,78L42,74L38,78Z M43,37H65V40H43Z M43,45H65V48H43Z M43,53H58V56H43Z M52,63H65V67H52Z" />
+</vector>
