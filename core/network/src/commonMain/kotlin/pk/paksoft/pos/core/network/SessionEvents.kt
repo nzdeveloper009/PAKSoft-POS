@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import org.koin.core.annotation.Singleton
 
-/** Raised when the server rejects the token (HTTP 401 `unauthenticated`); the session must end. */
+/** Raised when the server rejects the token (any HTTP 401 except `invalid_credentials`); the session must end. */
 @Singleton
 class SessionEvents {
     private val _unauthenticated = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)

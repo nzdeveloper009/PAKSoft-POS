@@ -111,7 +111,7 @@ sealed interface AppError {
 ```
 
 - `core:network` converts every Ktor exception and error envelope into `AppError` in one place, `ApiCaller.call { }` / `callUnit { }`. Repositories return `AppResult`; no exceptions cross a layer boundary. **Always rethrow `CancellationException`.**
-- A `401 unauthenticated` is also published on `SessionEvents`. `DefaultSessionRepository` (`core:data`) listens, clears the token and cached data, and moves to `SessionState.LoggedOut(shop, SessionExpired)`; `composeApp`'s session gate only reacts to `SessionState`.
+- Any `401` except `invalid_credentials` (including one whose body is not an error envelope) becomes `AppError.Unauthenticated` and is also published on `SessionEvents`. `DefaultSessionRepository` (`core:data`) listens, clears the token and cached data, and moves to `SessionState.LoggedOut(shop, SessionExpired)`; `composeApp`'s session gate only reacts to `SessionState`.
 
 ### 4.3 Repositories (`core:data`)
 
@@ -183,6 +183,7 @@ fun buildPosDatabase(builder: RoomDatabase.Builder<PosDatabase>): PosDatabase =
 - Money columns store **paisa as `Long`**.
 - Phase 1 may use destructive migration (it's a cache). From the first table that holds unsynced data (outbox), migrations are mandatory and tested.
 - **One database, one shop at a time:** logout or shop switch calls `clearAllTables()` (blocked while an outbox has pending rows).
+- A clear starts a new `SessionEpoch` (`core:data`) under its lock; a `refresh()` notes the epoch before its network call and writes only if it is unchanged, so an answer that lands after logout or shop switch is dropped.
 
 ### 6.2 DataStore and secrets (`core:datastore`)
 

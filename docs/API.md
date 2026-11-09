@@ -83,7 +83,7 @@ Error:
 }
 ```
 
-`message` is human-readable and safe to show. `fields` is present (possibly empty `{}`) only for `validation_failed`.
+`message` is human-readable and safe to show. `fields` is present (possibly empty `{}`) only for `validation_failed`. `details`, when present, must be a JSON object (`{}` when empty), never `[]` (PHP encodes an empty array as `[]`), and clients tolerate both.
 
 ### 1.6 Error codes
 

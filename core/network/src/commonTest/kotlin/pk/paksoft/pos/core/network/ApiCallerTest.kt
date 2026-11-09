@@ -61,6 +61,42 @@ class ApiCallerTest {
     }
 
     @Test
+    fun `401 without an envelope is unauthenticated and emits one event`() = runTest {
+        events.unauthenticated.test {
+            val r = respond(HttpStatusCode.Unauthorized, """{"message":"Unauthenticated."}""")
+            assertEquals(AppError.Unauthenticated, r.error())
+            awaitItem()
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    fun `html 401 is unauthenticated and emits one event`() = runTest {
+        events.unauthenticated.test {
+            val r = respond(HttpStatusCode.Unauthorized, "<html>Unauthorized</html>", ContentType.Text.Html)
+            assertEquals(AppError.Unauthenticated, r.error())
+            awaitItem()
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    fun `401 envelope with another code is unauthenticated and emits one event`() = runTest {
+        events.unauthenticated.test {
+            val r = respond(HttpStatusCode.Unauthorized, """{"error":{"code":"token_expired","message":"Expired."}}""")
+            assertEquals(AppError.Unauthenticated, r.error())
+            awaitItem()
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    fun `envelope with empty details array keeps its code`() = runTest {
+        val body = """{"error":{"code":"insufficient_stock","message":"No stock.","details":[]}}"""
+        assertEquals(AppError.Business("insufficient_stock", "No stock.", "[]"), respond(HttpStatusCode.UnprocessableEntity, body).error())
+    }
+
+    @Test
     fun `401 invalid credentials is a business error without session event`() = runTest {
         events.unauthenticated.test {
             val r = respond(HttpStatusCode.Unauthorized, ApiFixtures.ERROR_INVALID_CREDENTIALS)

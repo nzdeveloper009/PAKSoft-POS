@@ -64,18 +64,22 @@ class ApiCaller(private val json: Json, private val events: SessionEvents) {
         val error = try {
             json.decodeFromString(ErrorEnvelopeDto.serializer(), body).error
         } catch (e: SerializationException) {
-            return AppError.Server(status, null)
+            null
         } catch (e: IllegalArgumentException) {
-            return AppError.Server(status, null)
+            null
         }
-        return error.toAppError(status)
+        // Any 401 ends the session (docs/API.md 1.3), even without an envelope; only a failed login is not one.
+        if (status == 401 && error?.code != "invalid_credentials") return unauthenticated()
+        return error?.toAppError(status) ?: AppError.Server(status, null)
+    }
+
+    private fun unauthenticated(): AppError {
+        events.emitUnauthenticated()
+        return AppError.Unauthenticated
     }
 
     private fun ErrorBodyDto.toAppError(status: Int): AppError = when (code) {
-        "unauthenticated" -> {
-            events.emitUnauthenticated()
-            AppError.Unauthenticated
-        }
+        "unauthenticated" -> unauthenticated()
         "forbidden", "account_inactive", "role_not_supported" -> AppError.Forbidden(code, message)
         "not_found" -> AppError.NotFound(message)
         "validation_failed" -> AppError.Validation(message, fields ?: emptyMap())
