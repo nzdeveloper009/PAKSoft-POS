@@ -40,6 +40,17 @@ class DtoDecodingTest {
     }
 
     @Test
+    fun `gst shop bootstrap decodes gst state as an int`() {
+        val gst = ApiFixtures.BOOTSTRAP_200
+            .replace("\"invoice_format\": \"standard\"", "\"invoice_format\": \"gst\"")
+            .replace("\"gst_state\": null", "\"gst_state\": 1")
+        assertTrue("\"gst_state\": 1" in gst)
+        val b = PosJson.decodeFromString(DataEnvelope.serializer(BootstrapDto.serializer()), gst).data
+        assertEquals("gst", b.shop.invoiceFormat)
+        assertEquals(1, b.shop.gstState)
+    }
+
+    @Test
     fun `unknown keys are ignored`() {
         val withExtra = ApiFixtures.LOGIN_200.replace("\"warehouse_id\": null", "\"warehouse_id\": null, \"new_field\": 1")
         assertTrue(withExtra != ApiFixtures.LOGIN_200)

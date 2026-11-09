@@ -27,7 +27,8 @@ data class ShopDto(
     @SerialName("developed_by") val developedBy: String?,
     @SerialName("date_format") val dateFormat: String,
     @SerialName("invoice_format") val invoiceFormat: String,
-    @SerialName("gst_state") val gstState: String?,
+    /** 1 or 2 when [invoiceFormat] is "gst" (DOMAIN.md: state 1 → IGST, state 2 → SGST + CGST), else null. */
+    @SerialName("gst_state") val gstState: Int?,
     @SerialName("timezone") val timezone: String,
     @SerialName("currency") val currency: CurrencyDto?,
     @SerialName("features") val features: FeaturesDto,
