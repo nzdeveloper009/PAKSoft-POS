@@ -1,5 +1,7 @@
 package pk.paksoft.pos.core.data
 
+import co.touchlab.kermit.Logger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +37,8 @@ import pk.paksoft.pos.core.network.dto.SessionDto
  * its answer is dropped if any other transition happened while it was in flight.
  *
  * The token lives only in [TokenStore]; the cached session JSON is the `SessionDto` without it.
+ * A login that can't store its session fails with `Unexpected` and keeps nothing; ending a session
+ * clears what it can (failures are logged by exception type only) and always reaches the next state.
  */
 @Singleton
 class DefaultSessionRepository(
@@ -57,10 +61,22 @@ class DefaultSessionRepository(
 
     private val deviceName = "${config.platformName} (PAKSOFT POS ${config.appVersion})"
 
+    /** Logs exception types only: never a token, a password or a response body. */
+    private val log = Logger.withTag("Session")
+
     init {
         // UNDISPATCHED subscribes before the constructor returns, so no 401 can be missed.
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
-            events.unauthenticated.collect { expire() }
+            events.unauthenticated.collect {
+                // One failed expiry must not end the collector, or later 401s would never end a session.
+                try {
+                    expire()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    log.e { "Session expiry failed: ${e::class.simpleName}" }
+                }
+            }
         }
     }
 
@@ -95,8 +111,18 @@ class DefaultSessionRepository(
         }
         val token = dto.token
             ?: return@withLock AppResult.Failure(AppError.Unexpected(IllegalStateException("Login response has no token")))
-        tokens.write(shop.id, token)
-        val session = saveSession(dto)
+        val session = try {
+            tokens.write(shop.id, token)
+            saveSession(dto)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // Nothing half-stored: undo whatever was written, stay logged out.
+            log.w { "Login could not store the session: ${e::class.simpleName}" }
+            bestEffort("Token rollback") { tokens.clear(shop.id) }
+            bestEffort("Cached session rollback") { prefs.setCachedSessionJson(null) }
+            return@withLock AppResult.Failure(AppError.Unexpected(e))
+        }
         transition(SessionState.LoggedIn(shop, session))
         AppResult.Success(session)
     }
@@ -159,10 +185,22 @@ class DefaultSessionRepository(
         clearLocalSession(shop)
     }
 
+    /** Every step runs even if an earlier one fails, so the caller's state transition always happens. */
     private suspend fun clearLocalSession(shop: Shop) {
-        tokens.clear(shop.id)
-        prefs.setCachedSessionJson(null)
-        cleaner.clearAll()
+        bestEffort("Token clear") { tokens.clear(shop.id) }
+        bestEffort("Cached session clear") { prefs.setCachedSessionJson(null) }
+        bestEffort("Local data clear") { cleaner.clearAll() }
+    }
+
+    /** Runs [block] and logs a failure (exception type only) instead of throwing it; cancellation still propagates. */
+    private suspend fun bestEffort(step: String, block: suspend () -> Unit) {
+        try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            log.w { "$step failed: ${e::class.simpleName}" }
+        }
     }
 
     private suspend fun saveSession(dto: SessionDto): UserSession {

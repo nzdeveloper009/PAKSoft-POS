@@ -4,6 +4,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 // The simulator test runner (a bare process spawned by simctl) has no keychain: SecItemAdd returns
@@ -22,5 +23,14 @@ class KeychainTokenStoreTest {
     @Test fun `write replaces existing token`() = runTest {
         store.write("smf", "a"); store.write("smf", "b")
         assertEquals("b", store.read("smf")); store.clear("smf")
+    }
+}
+
+/** Runs without a keychain: the check happens before any Keychain call (which would fail here with another error). */
+class KeychainTokenStoreValidationTest {
+    private val store = KeychainTokenStore(service = "pk.paksoft.pos.token.test")
+
+    @Test fun `empty token is rejected before the keychain is touched`() = runTest {
+        assertFailsWith<IllegalArgumentException> { store.write("smf", "") }
     }
 }

@@ -64,7 +64,9 @@ class KeychainTokenStore(private val service: String = "pk.paksoft.pos.token") :
         }
     }
 
+    /** Throws [IllegalArgumentException] for an empty token before touching the Keychain (no bytes to pin). */
     override suspend fun write(shopId: String, token: String) {
+        require(token.isNotEmpty()) { "Token must not be empty" }
         clear(shopId)
         val bytes = token.encodeToByteArray()
         val data = bytes.usePinned {

@@ -14,6 +14,9 @@ class InMemoryAppPreferences(
     private val cachedSession = MutableStateFlow(cachedSessionJson)
     private val fixedDeviceId = deviceId
 
+    /** When true, [setCachedSessionJson] throws like a failing DataStore and keeps the old value. */
+    var failCachedSessionWrites: Boolean = false
+
     override val activeShopId: Flow<String?> = activeShop.asStateFlow()
 
     override suspend fun setActiveShopId(id: String?) {
@@ -25,6 +28,7 @@ class InMemoryAppPreferences(
     override val cachedSessionJson: Flow<String?> = cachedSession.asStateFlow()
 
     override suspend fun setCachedSessionJson(json: String?) {
+        check(!failCachedSessionWrites) { "DataStore write failed" }
         cachedSession.value = json
     }
 }

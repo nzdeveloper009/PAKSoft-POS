@@ -4,6 +4,7 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -218,6 +219,37 @@ class DefaultSessionRepositoryTest {
     }
 
     @Test
+    fun `login fails and stores nothing when the token can't be saved`() = runTest {
+        val prefs = InMemoryAppPreferences(activeShopId = "smf")
+        val tokens = InMemoryTokenStore().apply { failWrites = true }
+        val repo = repo(prefs, tokens)
+        repo.start()
+
+        val result = repo.login("cashier1", "pw")
+
+        val error = assertIs<AppError.Unexpected>(assertIs<AppResult.Failure>(result).error)
+        assertIs<IllegalStateException>(error.cause)
+        assertEquals(SessionState.LoggedOut(shop("smf"), null), repo.state.value)
+        assertTrue(tokens.tokens.isEmpty())
+        assertNull(prefs.cachedSessionJson.first())
+    }
+
+    @Test
+    fun `login rolls back the token when the session can't be cached`() = runTest {
+        val prefs = InMemoryAppPreferences(activeShopId = "smf").apply { failCachedSessionWrites = true }
+        val tokens = InMemoryTokenStore()
+        val repo = repo(prefs, tokens)
+        repo.start()
+
+        val result = repo.login("cashier1", "pw")
+
+        assertIs<AppError.Unexpected>(assertIs<AppResult.Failure>(result).error)
+        assertEquals(SessionState.LoggedOut(shop("smf"), null), repo.state.value)
+        assertTrue(tokens.tokens.isEmpty())
+        assertNull(prefs.cachedSessionJson.first())
+    }
+
+    @Test
     fun `unauthenticated event expires the session`() = runTest {
         val prefs = InMemoryAppPreferences(activeShopId = "local")
         val tokens = InMemoryTokenStore()
@@ -235,6 +267,27 @@ class DefaultSessionRepositoryTest {
         assertTrue(tokens.tokens.isEmpty())
         assertEquals(1, cleaner.clearCalls)
         assertNull(prefs.cachedSessionJson.first())
+    }
+
+    @Test
+    fun `a 401 after a failed expiry still ends the next session`() = runTest {
+        val tokens = InMemoryTokenStore()
+        val events = SessionEvents()
+        val repo = repo(InMemoryAppPreferences(activeShopId = "local"), tokens, events = events)
+        repo.start()
+        repo.login("cashier1", "pw")
+        tokens.failClears = true
+        events.emitUnauthenticated()
+        advanceUntilIdle()
+        tokens.failClears = false
+        repo.login("cashier1", "pw")
+        assertTrue(repo.state.value is SessionState.LoggedIn)
+
+        events.emitUnauthenticated()
+        advanceUntilIdle()
+
+        assertEquals(SessionState.LoggedOut(shop("local"), SessionNotice.SessionExpired), repo.state.value)
+        assertTrue(tokens.tokens.isEmpty())
     }
 
     @Test
@@ -289,6 +342,60 @@ class DefaultSessionRepositoryTest {
         assertNull(prefs.cachedSessionJson.first())
         assertNull(prefs.activeShopId.first())
         assertEquals(SessionState.NoShop, repo.state.value)
+    }
+
+    @Test
+    fun `expiry still ends the session when the token can't be cleared`() = runTest {
+        val prefs = InMemoryAppPreferences(activeShopId = "local")
+        val tokens = InMemoryTokenStore()
+        val cleaner = FakeLocalDataCleaner()
+        val events = SessionEvents()
+        val repo = repo(prefs, tokens, cleaner = cleaner, events = events)
+        repo.start()
+        repo.login("cashier1", "pw")
+        tokens.failClears = true
+
+        events.emitUnauthenticated()
+        advanceUntilIdle()
+
+        assertEquals(SessionState.LoggedOut(shop("local"), SessionNotice.SessionExpired), repo.state.value)
+        assertNull(prefs.cachedSessionJson.first())
+        assertEquals(1, cleaner.clearCalls)
+    }
+
+    @Test
+    fun `logout still logs out when the token can't be cleared`() = runTest {
+        val prefs = InMemoryAppPreferences(activeShopId = "smf")
+        val tokens = InMemoryTokenStore()
+        val cleaner = FakeLocalDataCleaner()
+        val repo = repo(prefs, tokens, cleaner = cleaner)
+        repo.start()
+        repo.login("cashier1", "pw")
+        tokens.failClears = true
+
+        repo.logout()
+
+        assertEquals(SessionState.LoggedOut(shop("smf"), null), repo.state.value)
+        assertNull(prefs.cachedSessionJson.first())
+        assertEquals(1, cleaner.clearCalls)
+    }
+
+    @Test
+    fun `switch shop still reaches the shop picker when the token can't be cleared`() = runTest {
+        val prefs = InMemoryAppPreferences(activeShopId = "smf")
+        val tokens = InMemoryTokenStore()
+        val cleaner = FakeLocalDataCleaner()
+        val repo = repo(prefs, tokens, cleaner = cleaner)
+        repo.start()
+        repo.login("cashier1", "pw")
+        tokens.failClears = true
+
+        repo.switchShop()
+
+        assertEquals(SessionState.NoShop, repo.state.value)
+        assertNull(prefs.activeShopId.first())
+        assertNull(prefs.cachedSessionJson.first())
+        assertEquals(1, cleaner.clearCalls)
     }
 
     @Test
