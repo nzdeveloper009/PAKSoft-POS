@@ -8,6 +8,7 @@ data class MoreUiState(
     val shopName: String = "",
     val isRefreshing: Boolean = false,
     val message: UiText? = null,
+    val isMessageError: Boolean = false,
 )
 
 sealed interface MoreAction {

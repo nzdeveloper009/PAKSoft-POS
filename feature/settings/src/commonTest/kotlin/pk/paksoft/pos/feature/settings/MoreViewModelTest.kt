@@ -53,6 +53,7 @@ class MoreViewModelTest {
         vm.onAction(MoreAction.RefreshData)
         assertEquals(UiText.Res(Res.string.more_refreshed), vm.state.value.message)
         assertEquals(false, vm.state.value.isRefreshing)
+        assertEquals(false, vm.state.value.isMessageError)
         assertEquals(1, bootstrap.refreshCalls)
     }
 
@@ -61,6 +62,7 @@ class MoreViewModelTest {
         val vm = MoreViewModel(session, bootstrap)
         vm.onAction(MoreAction.RefreshData)
         assertEquals(UiText.Res(UiRes.string.error_offline), vm.state.value.message)
+        assertEquals(true, vm.state.value.isMessageError)
         assertEquals(false, vm.state.value.isRefreshing)
     }
 

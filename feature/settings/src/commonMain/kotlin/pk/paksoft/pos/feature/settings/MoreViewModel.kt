@@ -47,13 +47,16 @@ class MoreViewModel(
 
     private fun refresh() {
         if (_state.value.isRefreshing) return
-        _state.update { it.copy(isRefreshing = true, message = null) }
+        _state.update { it.copy(isRefreshing = true, message = null, isMessageError = false) }
         viewModelScope.launch {
-            val message = when (val result = bootstrap.refresh()) {
+            val result = bootstrap.refresh()
+            val message = when (result) {
                 is AppResult.Success -> UiText.Res(Res.string.more_refreshed)
                 is AppResult.Failure -> result.error.toUiText()
             }
-            _state.update { it.copy(isRefreshing = false, message = message) }
+            _state.update {
+                it.copy(isRefreshing = false, message = message, isMessageError = result is AppResult.Failure)
+            }
         }
     }
 }

@@ -12,8 +12,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.resources.stringResource
+import pk.paksoft.pos.core.designsystem.component.ErrorBanner
 import pk.paksoft.pos.core.designsystem.component.PosOutlinedButton
 import pk.paksoft.pos.core.designsystem.component.PosTopBar
 import pk.paksoft.pos.core.designsystem.theme.PosSpacing
@@ -47,8 +51,17 @@ fun MoreScreen(state: MoreUiState, onAction: (MoreAction) -> Unit) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                state.message?.let {
-                    Text(it.asString(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                state.message?.let { message ->
+                    if (state.isMessageError) {
+                        ErrorBanner(message = message.asString(), onRetry = { onAction(MoreAction.RefreshData) })
+                    } else {
+                        Text(
+                            message.asString(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                        )
+                    }
                 }
                 PosOutlinedButton(
                     text = stringResource(Res.string.more_refresh),
@@ -81,6 +94,23 @@ private fun MoreScreenPreview() {
                 roleName = "Admin",
                 shopName = "Super madina Fan",
                 message = UiText.Res(Res.string.more_refreshed),
+            ),
+            onAction = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun MoreScreenErrorPreview() {
+    PosTheme {
+        MoreScreen(
+            state = MoreUiState(
+                userName = "cashier1",
+                roleName = "Admin",
+                shopName = "Super madina Fan",
+                message = UiText.Raw("No internet connection."),
+                isMessageError = true,
             ),
             onAction = {},
         )
