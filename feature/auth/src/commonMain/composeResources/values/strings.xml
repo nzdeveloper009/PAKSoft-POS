@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shop_picker_title">Choose your shop</string>
+    <string name="shop_picker_subtitle">Pick the business you want to work in.</string>
+    <string name="shop_dev_badge">Dev</string>
+    <string name="login_title">Log in</string>
+    <string name="login_shop_label">Shop: %1$s</string>
+    <string name="login_field_login">Username or email</string>
+    <string name="login_field_password">Password</string>
+    <string name="login_show_password">Show</string>
+    <string name="login_hide_password">Hide</string>
+    <string name="login_button">Log in</string>
+    <string name="login_change_shop">Change shop</string>
+    <string name="login_error_login_required">Enter your username or email.</string>
+    <string name="login_error_password_required">Enter your password.</string>
+</resources>
