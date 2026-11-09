@@ -27,7 +27,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -51,29 +50,31 @@ import pk.paksoft.pos.feature.settings.navigation.settingsEntries
 /** Material's compact-width breakpoint: a bottom bar below it, a navigation rail from it up. */
 private val RailMinWidth = 600.dp
 
-/** The signed-in home: the tabs the user may see, one back stack, and the shop-data refresh banner. */
+/**
+ * The signed-in home: the tabs the user may see, one back stack with Dashboard as the fixed start
+ * ([backStackFor]), and the shop-data refresh banner.
+ */
 @Composable
 fun MainScaffold(session: UserSession, vm: MainViewModel = koinViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val destinations = visibleDestinations(session.permissions, state.settings?.features?.ledger ?: false)
     val backStack = rememberNavBackStack(navSavedStateConfig, DashboardKey)
-    val current = backStack.firstOrNull()
+    val selected = selectedDestination(backStack)
+
+    fun showTab(destination: TopLevelDestination) {
+        backStack.clear()
+        backStack.addAll(backStackFor(destination))
+    }
 
     // A restored or open tab the user may no longer see (permissions or the shop's features changed).
-    LaunchedEffect(destinations, current) {
-        if (destinations.none { it.key == current }) {
-            backStack.clear()
-            backStack.add(DashboardKey)
-        }
+    LaunchedEffect(destinations, selected) {
+        if (selected !in destinations) showTab(TopLevelDestination.DASHBOARD)
     }
 
     MainLayout(
         destinations = destinations,
-        current = current,
-        onSelect = { destination ->
-            backStack.clear()
-            backStack.add(destination.key)
-        },
+        selected = selected,
+        onSelect = ::showTab,
         banner = state.banner?.asString(),
         onRetry = { vm.onAction(MainAction.RetryRefresh) },
     ) {
@@ -98,7 +99,7 @@ fun MainScaffold(session: UserSession, vm: MainViewModel = koinViewModel()) {
 @Composable
 private fun MainLayout(
     destinations: List<TopLevelDestination>,
-    current: NavKey?,
+    selected: TopLevelDestination?,
     onSelect: (TopLevelDestination) -> Unit,
     banner: String?,
     onRetry: () -> Unit,
@@ -111,7 +112,7 @@ private fun MainLayout(
                 NavigationRail {
                     destinations.forEach { destination ->
                         NavigationRailItem(
-                            selected = destination.key == current,
+                            selected = destination == selected,
                             onClick = { onSelect(destination) },
                             icon = { Icon(destination.icon, contentDescription = null) },
                             label = { Text(stringResource(destination.label)) },
@@ -139,7 +140,7 @@ private fun MainLayout(
                         NavigationBar {
                             destinations.forEach { destination ->
                                 NavigationBarItem(
-                                    selected = destination.key == current,
+                                    selected = destination == selected,
                                     onClick = { onSelect(destination) },
                                     icon = { Icon(destination.icon, contentDescription = null) },
                                     label = { Text(stringResource(destination.label)) },
@@ -166,7 +167,7 @@ private fun MainLayoutPreview() {
     PosTheme {
         MainLayout(
             destinations = TopLevelDestination.entries,
-            current = DashboardKey,
+            selected = TopLevelDestination.DASHBOARD,
             onSelect = {},
             banner = stringResource(UiRes.string.error_offline),
             onRetry = {},
