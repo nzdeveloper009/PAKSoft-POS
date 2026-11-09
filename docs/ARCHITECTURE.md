@@ -98,13 +98,13 @@ sealed interface AppError {
     data object Offline : AppError
     data object Timeout : AppError
     data object Unauthenticated : AppError                       // → logout
-    data class Forbidden(val message: String) : AppError
+    data class Forbidden(val code: String, val message: String) : AppError
     data class NotFound(val message: String) : AppError
     data class Validation(val message: String, val fields: Map<String, List<String>>) : AppError
-    data class Conflict(val message: String, val details: JsonObject?) : AppError
-    data class Business(val code: String, val message: String, val details: JsonObject?) : AppError // insufficient_stock, totals_mismatch…
-    data class Server(val status: Int, val message: String) : AppError
-    data class Unexpected(val cause: Throwable) : AppError
+    data class Conflict(val message: String, val detailsJson: String?) : AppError
+    data class Business(val code: String, val message: String, val detailsJson: String?) : AppError // insufficient_stock, totals_mismatch…
+    data class Server(val status: Int, val message: String?) : AppError   // message is null for a non-JSON body (e.g. HTML 404)
+    data class Unexpected(val cause: Throwable?) : AppError
 }
 ```
 
