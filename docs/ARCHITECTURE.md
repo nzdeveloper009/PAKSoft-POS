@@ -1,6 +1,6 @@
 # App architecture
 
-How the PBSF Android + iOS app is built. Read `README.md` first for context and `DOMAIN.md` for business rules; `API.md` is the server contract.
+How the PAKSOFT POS Android + iOS app is built. Read `README.md` first for context and `DOMAIN.md` for business rules; `API.md` is the server contract.
 
 Root package and Android `applicationId` / iOS bundle id: **`pk.paksoft.pos`** (confirmed by the owner on 9 November 2026; permanent after the first store release).
 

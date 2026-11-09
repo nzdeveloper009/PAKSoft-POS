@@ -1,4 +1,4 @@
-# CLAUDE.md — working rules for the PBSF app
+# CLAUDE.md — working rules for the PAKSOFT POS app
 
 This folder is a **Compose Multiplatform (Android + iOS)** client for the SalePro POS of three shops: `smf`, `bsf` and `mummyandme` (Laravel 6). The app must behave **exactly like the website** for the same data. The web source lives next door at `../pbsf.org.pk/smf/` and is the reference for every behavior.
 

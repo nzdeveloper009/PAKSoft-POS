@@ -177,7 +177,7 @@ Throttled to 10 per minute per IP + login.
 Request:
 
 ```json
-{ "login": "cashier1", "password": "••••••••", "device_name": "Pixel 8 (PBSF 1.0.0)" }
+{ "login": "cashier1", "password": "••••••••", "device_name": "Pixel 8 (PAKSOFT POS 1.0.0)" }
 ```
 
 `login` is a username **or** an email (`DOMAIN.md` §2).

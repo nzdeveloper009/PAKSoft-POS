@@ -1,4 +1,4 @@
-# PBSF POS: Android & iOS app
+# PAKSOFT POS: Android & iOS app
 
 A Compose Multiplatform app (Android + iOS) that brings the **SalePro point of sale and inventory system** of three shops (**Super Madina Solar Fan `smf`, BSF `bsf`, and Mummy & Me `mummyandme`**) to phones and tablets: same shops, same data, same rules as the website.
 
