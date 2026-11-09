@@ -16,16 +16,19 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import pk.paksoft.pos.core.designsystem.resources.Res
+import pk.paksoft.pos.core.designsystem.resources.retry
 import pk.paksoft.pos.core.designsystem.theme.PosSpacing
 import pk.paksoft.pos.core.designsystem.theme.PosTheme
 
-/** Inline error message. [onRetry] adds a retry action; its label is [retryLabel] (pass a localized string). */
+/** Inline error message. [onRetry] adds a retry action; its label defaults to the `retry` string resource. */
 @Composable
 fun ErrorBanner(
     message: String,
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null,
-    retryLabel: String = "Retry",
+    retryLabel: String = stringResource(Res.string.retry),
 ) {
     Surface(
         modifier = modifier
