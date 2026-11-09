@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_pos">POS</string>
+    <string name="nav_sales">Sales</string>
+    <string name="nav_ledger">Ledger</string>
+    <string name="nav_more">More</string>
+    <string name="coming_soon">Coming in the next update.</string>
+</resources>

@@ -4,7 +4,13 @@ A Compose Multiplatform app (Android + iOS) that brings the **SalePro point of s
 
 > **Scope:** the app is only for these three POS shops. The WordPress website at the root of `pbsf.org.pk` (Pakistan Blind Sports Federation) is **not** part of the app; it only shares the same hosting account. "PBSF" is just this project's folder name.
 
-**Status (9 November 2026):** documentation only. No app or API code exists yet. Next step: Phase 0 (see Roadmap).
+**Status (9 November 2026):** Phase 0 app complete; no API server exists yet (app first, API later). Next step: the `/api/v1` backend, then Phase 1.
+
+- **Works:** shop picker (three shops, plus Staging and Local API in debug builds), login with field checks and error banners, the session gate (shop picker → login → home), a saved session that survives restarts and works offline, bottom navigation on phones and a navigation rail on wide screens (Dashboard · POS · Sales · Ledger · More, shown by permission; all but More are placeholders), the More screen (refresh shop data, switch shop, log out), and the shop-data refresh banner with Retry.
+- **Checked on Android** (Pixel 10 emulator): the shop picker; login errors against an unreachable Local API ("No internet connection…") and against a live shop that has no API yet ("This shop isn't connected to the app yet."); empty-field errors; relaunch reopening the last shop's login. The signed-in screens (home, tabs, More, offline restart with the cached session, Retry, logout, rail in landscape) were run against a throwaway local mock of the API examples, not a real server.
+- **Checked on iOS** (iPhone 17 Pro simulator): the app starts and shows the shop picker in the app theme. Nothing past that screen was driven on iOS.
+- **Not verified yet:** a real login on either platform and the iOS Keychain token store (no API server exists, so no real token has been written). Both are the first checks once the API is up.
+- **Tests:** unit tests on every module, run as `iosSimulatorArm64Test` and `testAndroidHostTest`; Koin's graph is checked at compile time.
 
 | | |
 |---|---|
@@ -71,7 +77,7 @@ PBSF/
 ├── composeApp/                 shared root: App(), session gate, navigation, initKoin()
 ├── build-logic/convention/     pos.kmp.library, pos.kmp.compose, pos.kmp.feature, pos.koin, pos.room, pos.android.application
 ├── core/
-│   ├── common/                 AppResult, AppError, dispatchers, clock
+│   ├── common/                 AppResult, AppError, dispatchers, application scope
 │   ├── model/                  Money, Shop, SellableItem, Cart, Sale, enums
 │   ├── network/                Ktor client, APIs, DTOs
 │   ├── database/               Room database, entities, DAOs
@@ -92,19 +98,17 @@ PBSF/
 
 ## Getting started
 
-Prerequisites: macOS with Xcode 26+, Android Studio (current stable) with the Kotlin Multiplatform plugin, JDK 17+, an Android emulator or device, an iOS simulator.
-
-These commands apply once Phase 0 has created the project:
+Prerequisites: macOS with Xcode 26+, Android Studio with the Kotlin Multiplatform plugin (AGP 9.4.0 support), JDK 17, an Android emulator or device, an iOS simulator. Gradle must run on JDK 17, and the Xcode build needs `local.properties` with `sdk.dir` (or `ANDROID_HOME`) because its build phase runs Gradle.
 
 ```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
 ./gradlew :androidApp:assembleDebug        # build Android
 ./gradlew :androidApp:installDebug         # install on a connected device/emulator
-./gradlew allTests                         # all common + platform unit tests
-./gradlew check                            # tests + lint
+./gradlew allTests                         # unit tests: iosSimulatorArm64Test + testAndroidHostTest in every module
 open iosApp/iosApp.xcodeproj               # run on an iOS simulator from Xcode
 ```
 
-Debug builds include a **Staging** shop pointing at `https://pbsf.org.pk/smf-staging/api/v1`. **Never test write actions (sales, payments, ledger edits) against a production shop.**
+Debug builds include two dev shops: **Staging** (`https://pbsf.org.pk/smf-staging/api/v1`) and **Local API** (a server on your machine at port 8010: `10.0.2.2` from the Android emulator, `127.0.0.1` from the iOS simulator; plain HTTP is allowed only to these local addresses, only in debug builds). **Never test write actions (sales, payments, ledger edits) against a production shop.**
 
 ## Roadmap
 

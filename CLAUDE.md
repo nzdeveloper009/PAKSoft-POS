@@ -35,7 +35,7 @@ If a task needs a rule these docs don't cover, read the legacy code (`../pbsf.or
 - ViewModels: `@KoinViewModel`, expose `StateFlow` built with `stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), initial)`, a single `onAction(action)` entry.
 - Composables: `XxxRoute` (gets the ViewModel via a `koinViewModel()` default parameter, handles effects and navigation callbacks) + `XxxScreen` (stateless) + at least one `@Preview` of `XxxScreen`.
 - Collect with `collectAsStateWithLifecycle()`.
-- All user-visible text in `composeResources/values/strings.xml` of the owning module; ViewModels emit `UiText`.
+- All user-visible text in `composeResources/values/strings.xml` of the owning module; ViewModels emit `UiText`. Write apostrophes plainly (`isn't`): Compose resources don't unescape Android-style `\'`.
 - Colors, type, shapes and spacing only from `PosTheme` (`core:designsystem`). No literal colors in features.
 - Lists: `LazyColumn`/`LazyVerticalGrid` with stable `key`s.
 - Every screen handles four states: loading, content, empty, error (cached content + error banner when a refresh fails).
@@ -69,7 +69,7 @@ Navigation 3 (`ARCHITECTURE.md` §7). Each feature exposes `fun EntryProviderSco
 
 1. Add `include(":feature:xyz")` to `settings.gradle.kts`.
 2. `feature/xyz/build.gradle.kts`: `plugins { id("pos.kmp.feature") }` and only extra dependencies.
-3. Create, under `src/commonMain/kotlin/pk/paksoft/pbsf/feature/xyz/`:
+3. Create, under `src/commonMain/kotlin/pk/paksoft/pos/feature/xyz/`:
    - `di/XyzModule.kt`: the Koin triad.
    - `navigation/XyzKeys.kt`: `@Serializable` keys implementing `NavKey`.
    - `navigation/XyzEntries.kt`: `EntryProviderScope<NavKey>.xyzEntries(...)`.
@@ -124,7 +124,7 @@ JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew :composeApp:linkDebugFramewo
 xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' -derivedDataPath build/ios build | tail -3
 ```
 
-iOS simulator tests run on "iPhone 17 Pro"; pass `-Ppos.iosTestDevice="<simulator name>"` to use another. The Xcode project is generated from `iosApp/project.yml`: after editing it, run `cd iosApp && xcodegen generate` and commit the regenerated project.
+iOS simulator tests run on "iPhone 17 Pro"; pass `-Ppos.iosTestDevice="<simulator name>"` to use another. The Xcode build runs Gradle in a build phase that doesn't inherit your shell, so it needs `local.properties` with `sdk.dir=<Android SDK path>` (gitignored) or `ANDROID_HOME` set for Xcode. Android host tests can't load Compose resources (`android.content.res.Resources` isn't mocked); a test that reads resource text goes in `iosTest`. The Xcode project is generated from `iosApp/project.yml`: after editing it, run `cd iosApp && xcodegen generate` and commit the regenerated project.
 
 Report what you ran and its result. If something wasn't run (no simulator, no network), say so. For UI work, run the app and look at the screen; for POS math, include the golden test results.
 
@@ -137,5 +137,5 @@ Report what you ran and its result. If something wasn't run (no simulator, no ne
 
 ## Repo housekeeping
 
-- This folder is not a git repository yet. Before Phase 0 code, ask the user whether to `git init` (and where the remote is). Commit in small, buildable steps.
+- This folder is a git repository; its remote is https://github.com/nzdeveloper009/PAKSoft-POS (public). One commit per finished, building step; a commit is pushed only after its review passes. Never commit server details, credentials or customer data.
 - Keep `docs/` current: a merged change that alters behavior, an endpoint or a module rule updates the matching doc in the same change.

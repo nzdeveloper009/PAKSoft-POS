@@ -14,6 +14,8 @@ android {
 
 dependencies {
     implementation(project(":composeApp"))
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.android)
     implementation(libs.activity.compose)
     debugImplementation(libs.compose.ui.tooling)
 }

@@ -36,7 +36,7 @@ Root package and Android `applicationId` / iOS bundle id: **`pk.paksoft.pos`** (
 |---|---|---|---|
 | `androidApp` | Android application | `PosApplication`, `MainActivity`, manifest, launcher icons | `composeApp` |
 | `iosApp` | Xcode project | `iOSApp.swift`, `ContentView.swift` hosting `MainViewController()` | `composeApp` framework |
-| `composeApp` | KMP + Compose | `App()`, session gate, `NavDisplay`, top-level navigation, `initKoin()`, iOS `MainViewController()` | every `feature:*`, `core:*` |
+| `composeApp` | KMP + Compose (Kotlin package and Android namespace `pk.paksoft.pos.app`) | `App()`, session gate, `NavDisplay`, top-level navigation, `initKoin()`, iOS `MainViewController()` and `initKoinIos()` | every `feature:*`, `core:*` (all directly, so the Koin graph check sees them; `core:model` as `api` for `androidApp`) |
 | `feature:<name>` | KMP + Compose | screens, ViewModels, UI state, Nav3 entries, Koin module | `core:domain`, `core:data`, `core:model`, `core:common`, `core:designsystem`, `core:ui` |
 | `core:domain` | KMP | `CartCalculator`, `PricingRules`, use cases that combine repositories | `core:data`, `core:model`, `core:common` |
 | `core:data` | KMP | repository interfaces + implementations, sync logic, DTO↔entity↔model mappers | `core:network`, `core:database`, `core:datastore`, `core:model`, `core:common` |
@@ -46,8 +46,8 @@ Root package and Android `applicationId` / iOS bundle id: **`pk.paksoft.pos`** (
 | `core:designsystem` | KMP + Compose | `PosTheme`, color/type/shape/spacing tokens, components, Nunito font, icons | — |
 | `core:ui` | KMP + Compose | `UiText`, money/date formatters, state scaffolds, permission helpers, platform UI bridges (scanner, share) | `core:designsystem`, `core:model`, `core:common` |
 | `core:model` | KMP (pure) | domain models: `Money`, `Shop`, `SellableItem`, `Cart`, `Sale`, enums | `core:common` |
-| `core:common` | KMP (pure) | `AppResult`, `AppError`, `AppDispatchers`, `Clock`, id generation | — |
-| `core:testing` | KMP | fakes, test dispatcher helpers, JSON fixture loader | anything it fakes |
+| `core:common` | KMP (pure) | `AppResult`, `AppError`, `AppDispatchers`, `ApplicationScope`, id generation (`newUuid`) | — |
+| `core:testing` | KMP | fakes (`FakeSessionRepository`, `FakeBootstrapRepository`, `FakeAuthApi`, `FakeBootstrapApi`, `FakeLocalDataCleaner`), `InMemoryAppPreferences`, `InMemoryTokenStore`, `TestData` (the `API.md` examples as models and DTOs). The raw JSON fixtures live in `core:network`'s `commonTest` (`ApiFixtures`) | anything it fakes |
 
 Rules:
 
@@ -71,6 +71,8 @@ Rules:
 | `pos.android.application` | `com.android.application` for `androidApp` (AGP 9 has built-in Kotlin; a KMP module can't also be an Android application, which is why `androidApp` is separate) |
 
 - **Targets:** Android, `iosArm64` (devices), `iosSimulatorArm64` (Apple-silicon simulators). Intel simulators (`iosX64`) are not targeted.
+- **Test tasks:** `iosSimulatorArm64Test` and `testAndroidHostTest` (Android host tests, enabled with `withHostTest`) per module; `allTests` runs both everywhere. `core:datastore` also has Android device tests (`connectedAndroidDeviceTest`). Android host tests can't load Compose resources, so tests that read resource text live in `iosTest`.
+- **`composeApp` overrides** the path-derived namespace: Android namespace `pk.paksoft.pos.app`, Compose `Res` class in `pk.paksoft.pos.app.resources`, and an explicit framework `bundleId` (Koin's generated code sits outside the app package, so the compiler can't infer one).
 - **SDK levels (my call, see README):** `minSdk 26`, `compileSdk 37`, `targetSdk 36`; iOS deployment target 16.0.
 - **`gradle.properties`** must contain `android.disallowKotlinSourceSets=false` (KSP for Room with AGP 9 built-in Kotlin), `org.gradle.configuration-cache=true`, `org.gradle.caching=true`, `android.useAndroidX=true`, `android.nonTransitiveRClass=true`.
 - **Gradle wrapper:** 9.7.1 (already cached on this machine).
@@ -108,8 +110,8 @@ sealed interface AppError {
 }
 ```
 
-- `core:network` converts every Ktor exception and error envelope into `AppError` in one function (`safeApiCall { }`). Repositories return `AppResult`; no exceptions cross a layer boundary. **Always rethrow `CancellationException`.**
-- `Unauthenticated` is also published on a `SessionEvents` flow; `composeApp` listens and routes to login.
+- `core:network` converts every Ktor exception and error envelope into `AppError` in one place, `ApiCaller.call { }` / `callUnit { }`. Repositories return `AppResult`; no exceptions cross a layer boundary. **Always rethrow `CancellationException`.**
+- A `401 unauthenticated` is also published on `SessionEvents`. `DefaultSessionRepository` (`core:data`) listens, clears the token and cached data, and moves to `SessionState.LoggedOut(shop, SessionExpired)`; `composeApp`'s session gate only reacts to `SessionState`.
 
 ### 4.3 Repositories (`core:data`)
 
@@ -145,11 +147,10 @@ interface SalesRepository {
 - Engines: **OkHttp** on Android, **Darwin** on iOS (platform Koin modules, §8).
 - One `HttpClient`, configured with:
   - `ContentNegotiation` + `Json { ignoreUnknownKeys = true; explicitNulls = false; encodeDefaults = true }`
-  - `HttpTimeout` (connect 15 s, request 30 s; uploads 120 s per request)
-  - `DefaultRequest`: `Accept`, `Accept-Language`, `User-Agent`, `X-Device-Id`
-  - Base URL resolved **per request** from the active shop (`ActiveShopProvider`), never baked into the client, so switching shop needs no new client
-  - A small custom plugin adds `Authorization: Bearer <token>` read from `AuthTokenProvider` on every request (no token caching, so switching shop or logging out takes effect immediately); requests marked `SkipAuth` (login) get no header. A `401` → `AppError.Unauthenticated`; no refresh (Sanctum tokens don't refresh)
-  - `Logging` only in debug builds, with `sanitizeHeader { it == HttpHeaders.Authorization }`; never log request bodies of `/auth/login`
+  - `HttpTimeout` (connect 15 s, request 30 s, socket 30 s; uploads 120 s per request when they arrive) and `expectSuccess = false` (`ApiCaller` maps the status)
+  - Base URL resolved **per request** from the active shop: `ApiEndpoint.url(path)` asks `ActiveShopProvider`, so nothing is baked into the client and switching shop needs no new client
+  - One custom plugin, `PosHeaders`, sets `Accept`, `Accept-Language`, `User-Agent`, `X-Device-Id` and `Authorization: Bearer <token>` on every request, reading the token from `AuthTokenProvider` each time (no caching, so switching shop or logging out takes effect immediately); requests carrying the `SkipAuth` attribute (login) get no `Authorization` header. A `401` → `AppError.Unauthenticated`; no refresh (Sanctum tokens don't refresh)
+  - `Logging` only in debug builds, at `LogLevel.INFO` (URL, method and status; never bodies) with `sanitizeHeader { it == HttpHeaders.Authorization }`
 - DTOs: `@Serializable` data classes with `@SerialName("snake_case")` on every property; money fields use `MoneySerializer` (string ↔ `Money`).
 - One API class per area (`AuthApi`, `BootstrapApi`, `CatalogApi`, `CustomerApi`, `SalesApi`, `CashRegisterApi`, `LedgerApi`), each a thin `@Singleton` wrapper returning `AppResult<Dto>`.
 
@@ -226,10 +227,13 @@ NavDisplay(
 )
 ```
 
-- On iOS (non-JVM) the back stack is saved with kotlinx.serialization, so `navSavedStateConfig` must register **every** `NavKey` subclass in a polymorphic `SerializersModule`. Adding a route = adding it there; a missing one crashes on iOS only.
+- On iOS (non-JVM) the back stack is saved with kotlinx.serialization, so `navSavedStateConfig` (`composeApp/.../navigation/NavSavedState.kt`) must register **every** `NavKey` subclass in a polymorphic `SerializersModule`. Adding a route = adding it there; a missing one crashes on iOS. `NavSavedStateTest` (`composeApp` `iosTest`) round-trips every top-level key.
 - Koin's `koin-compose-navigation3` integration is DSL-only today, so this app wires entries by hand as above and uses plain `koinViewModel()` inside each entry. This keeps the project in one DI style.
-- **Top-level destinations** (bottom bar on phones, navigation rail on tablets), shown only when the user has the permission: Dashboard · POS · Sales · Ledger · More (Products, Customers, Cash register, Settings, later modules). This mirrors the web sidebar order.
-- Session gate in `App()`: no active shop → Shop picker; no token → Login; token → bootstrap → main navigation.
+- **Top-level destinations** (bottom bar on phones, navigation rail on tablets), shown only when the user has the permission: Dashboard · POS · Sales · Ledger · More (Products, Customers, Cash register, Settings, later modules). This mirrors the web sidebar order. `TopLevelDestination` (`composeApp`) holds each tab's key, label, icon, required permissions and whether it needs the shop's ledger feature; `visibleDestinations(permissions, ledgerEnabled)` filters them. Phase 0: POS needs `sales-add`, Sales needs `sales-index`, Ledger needs `sales-index` and `features.ledger`.
+- `MainScaffold` keeps **one back stack**; selecting a tab clears it and adds that tab's key, and a tab the user can no longer see falls back to Dashboard. Below 600 dp of width it shows a Material 3 `NavigationBar`, otherwise a `NavigationRail` (plain `BoxWithConstraints`; no adaptive library yet).
+- Session gate in `App()`, driven only by `SessionRepository.state`: `Starting` → loading; `NoShop` → shop picker; `LoggedOut` → login (keyed by shop id); `LoggedIn` → `MainScaffold`. A saved session shows at once, offline too; `GET /me` refreshes it in the background. `AppViewModel` lives at the root (activity / iOS view controller) and calls `SessionRepository.start()` once.
+- `MainViewModel` also lives at the root, so it outlives logins: it refreshes bootstrap every time the state becomes `LoggedIn` (app start with a saved session, or a new login), cancels that refresh when the session ends, and shows a refresh failure (except `Unauthenticated`) as a banner with Retry above the tab content.
+- The app draws edge to edge: `MainScaffold` handles the system-bar insets for the tabs, and `App()` pads the shop picker and login (which have no app bar) with `safeDrawingPadding()`.
 
 ## 8. Dependency injection (Koin Annotations + Koin Compiler Plugin)
 
@@ -258,11 +262,16 @@ class SalesModule
 @ComponentScan("pk.paksoft.pos.core.network")
 class NetworkModule {
     @Singleton
-    fun json(): Json = Json { ignoreUnknownKeys = true; explicitNulls = false; encodeDefaults = true }
+    fun json(): Json = PosJson   // ignoreUnknownKeys, explicitNulls = false, encodeDefaults
 
     @Singleton
-    fun httpClient(engine: HttpClientEngine, json: Json, tokens: TokenStore, shops: ActiveShopProvider): HttpClient =
-        createPosHttpClient(engine, json, tokens, shops)
+    fun httpClient(
+        engine: HttpClientEngine,
+        json: Json,
+        tokens: AuthTokenProvider,
+        prefs: AppPreferences,
+        @Provided config: AppConfig,
+    ): HttpClient = createPosHttpClient(engine, json, tokens, prefs, config)
 }
 
 // commonMain
@@ -279,21 +288,28 @@ class NetworkModule {
 @KoinApplication
 object PosKoinApp
 
-fun initKoin(platformConfig: KoinAppDeclaration? = null) =
+fun initKoin(config: AppConfig, platform: KoinAppDeclaration? = null) {
     startKoin<PosKoinApp> {            // org.koin.plugin.module.dsl.startKoin
-        platformConfig?.invoke(this)
+        koin.declare(config)           // consumers take `@Provided config: AppConfig`
+        platform?.invoke(this)
     }
+}
 
-// androidApp — PosApplication.onCreate()
-initKoin { androidContext(this@PosApplication) }
+// androidApp — PosApplication.onCreate() (androidApp depends on koin-android for androidContext)
+initKoin(AppConfig(BuildConfig.DEBUG, "Android", Build.VERSION.RELEASE, BuildConfig.VERSION_NAME, "http://10.0.2.2:8010/api/v1")) {
+    androidContext(this@PosApplication)
+}
 
+// composeApp iosMain — KoinInitIos.kt: initKoinIos() builds the iOS AppConfig (Platform.isDebugBinary, UIDevice, bundle version)
 // iosApp — iOSApp.swift
-init() { KoinInitKt.doInitKoin() }
+init() { KoinInitIosKt.doInitKoinIos() }
 ```
 
+- `AppConfig` (debug flag, platform, OS and app version, Local API URL) is not a definition: it's declared at start and injected with `@Provided`.
+
 - In Compose: `vm: SalesListViewModel = koinViewModel()` as a **default parameter** of the route composable, so previews and tests can pass a fake.
-- Multi-module compile check: the entry point (`composeApp`) sees a module's definitions only through its compile classpath. `[KOIN-D001]` for a definition that exists → expose that module with `api(...)` or add it directly to `composeApp`.
-- After setup, prove the check runs: remove a needed definition, build, expect a `[KOIN-…]` error, restore it.
+- Multi-module compile check: the entry point (`composeApp`) sees a module's definitions only through its compile classpath. `[KOIN-D001]` for a definition that exists → expose that module with `api(...)` or add it directly to `composeApp`. That's why `composeApp` depends on every `core:*` module directly.
+- The check is proven to run at `PosKoinApp` (Phase 0): an unbound constructor parameter fails the build with `[KOIN-D001]` on Android and iOS, and dropping `core:datastore` from `composeApp` fails the Android build with `[KOIN-D001] Missing dependency: …TokenStore`. Repeat the probe after changing how Koin starts.
 
 ## 9. UI architecture (per screen)
 
@@ -339,7 +355,7 @@ fun SalesListScreen(state: SalesListUiState, onAction: (SalesListAction) -> Unit
 
 ## 10. Adaptive layout
 
-Use window size classes (`org.jetbrains.compose.material3.adaptive`):
+Phase 0 needs only the navigation switch, done with a 600 dp width breakpoint (`BoxWithConstraints` in `MainScaffold`). The two-pane screens below will use window size classes (`org.jetbrains.compose.material3.adaptive`, not in the catalog yet; adding it needs the owner's OK):
 
 | Screen | Compact (phone) | Medium/Expanded (tablet, landscape) |
 |---|---|---|
@@ -407,7 +423,8 @@ agp = "9.4.0"
 ksp = "2.3.13"                      # Room only; confirm Kotlin 2.4 support in KSP release notes
 compose-multiplatform = "1.12.2"
 compose-material3 = "1.9.0"         # org.jetbrains.compose.material3
-compose-material3-adaptive = "1.3.0"
+compose-material3-adaptive = "1.3.0"  # planned; not in the catalog yet
+compose-material-icons = "1.7.3"    # org.jetbrains.compose.material:material-icons-core
 androidx-activity-compose = "1.13.0"
 jb-lifecycle = "2.11.0"             # org.jetbrains.androidx.lifecycle (viewmodel-compose, runtime-compose, viewmodel-navigation3)
 jb-navigation3 = "1.2.0"            # org.jetbrains.androidx.navigation3:navigation3-ui
@@ -420,7 +437,7 @@ datastore = "1.3.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.12.0"
 kotlinx-datetime = "0.8.0"
-coil = "3.6.3"                      # coil3 + coil-network-ktor3
+coil = "3.6.3"                      # coil3 + coil-network-ktor3; planned, not in the catalog yet
 kermit = "2.2.0"
 turbine = "1.2.1"
 ```
