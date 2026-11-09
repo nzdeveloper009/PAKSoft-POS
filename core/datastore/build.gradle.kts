@@ -10,3 +10,17 @@ kotlin {
         implementation(libs.kotlinx.coroutines.core)
     }
 }
+
+kotlin {
+    android {
+        withDeviceTest {
+            instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        }
+    }
+    sourceSets.getByName("androidDeviceTest").dependencies {
+        implementation(libs.kotlin.test)
+        implementation(libs.kotlinx.coroutines.test)
+        implementation(libs.androidx.test.runner)
+        implementation(libs.androidx.test.ext.junit)
+    }
+}

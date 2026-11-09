@@ -26,6 +26,7 @@ import platform.Foundation.CFBridgingRetain
 import platform.Security.SecItemAdd
 import platform.Security.SecItemCopyMatching
 import platform.Security.SecItemDelete
+import platform.Security.errSecItemNotFound
 import platform.Security.errSecSuccess
 import platform.Security.kSecAttrAccessible
 import platform.Security.kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
@@ -80,8 +81,9 @@ class KeychainTokenStore(private val service: String = "pk.paksoft.pos.token") :
 
     override suspend fun clear(shopId: String) {
         val query = query(shopId)
-        SecItemDelete(query)
+        val status = SecItemDelete(query)
         CFRelease(query)
+        check(status == errSecSuccess || status == errSecItemNotFound) { "Keychain delete failed (status $status)" }
     }
 
     private fun query(shopId: String): CFMutableDictionaryRef {
