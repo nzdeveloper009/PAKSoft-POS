@@ -58,7 +58,7 @@ Stock and pricing rules stay on the server. The app mirrors the POS cart arithme
 | Preferences | DataStore 1.3.0 (+ Keystore/Keychain for the auth token) |
 | Navigation | Navigation 3 for Compose Multiplatform 1.2.0 |
 | Images / logging | Coil 3, Kermit |
-| Build | Gradle version catalog, convention plugins in `build-logic`, AGP 9.5.1 |
+| Build | Gradle version catalog, convention plugins in `build-logic`, AGP 9.4.0 |
 
 Full version list: `docs/ARCHITECTURE.md` §15.
 

@@ -398,10 +398,12 @@ POS payment button colors (exact web values): Card `#0984E3` Â· Cash `#00CEC9` Â
 
 Latest stable releases on Maven Central / Google Maven, checked 9 November 2026. Bump deliberately, one family at a time.
 
+AGP is pinned to 9.4.0, the newest version the team's Android Studio supports; do not bump it past what the IDE supports.
+
 ```toml
 [versions]
 kotlin = "2.4.21"
-agp = "9.5.1"
+agp = "9.4.0"
 ksp = "2.3.13"                      # Room only; confirm Kotlin 2.4 support in KSP release notes
 compose-multiplatform = "1.12.2"
 compose-material3 = "1.9.0"         # org.jetbrains.compose.material3

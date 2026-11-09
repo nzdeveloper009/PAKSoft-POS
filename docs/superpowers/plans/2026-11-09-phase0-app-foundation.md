@@ -6,7 +6,7 @@
 
 **Architecture:** Multi-module KMP project with Gradle convention plugins. `core:*` modules (common, model, designsystem, ui, datastore, network, database, data, testing) and two features (`auth`, `settings`) behind a shared `composeApp` that starts Koin and hosts Navigation 3. Room caches the bootstrap data, DataStore holds preferences, the token sits in the Keystore/Keychain, and Ktor talks to `<shop>/api/v1`.
 
-**Tech Stack:** Kotlin 2.4.21, Compose Multiplatform 1.12.2 (Material 3 1.9.0), AGP 9.5.1, Gradle 9.7.1, Koin 4.2.2 + Koin Compiler Plugin 1.2.3 (Annotations), Ktor 3.6.1, Room 2.8.5 + KSP 2.3.13, DataStore 1.3.0, Navigation 3 (JetBrains) 1.2.0, kotlinx.serialization 1.12.0, kotlinx-datetime 0.8.0, Kermit 2.2.0, Turbine 1.2.1.
+**Tech Stack:** Kotlin 2.4.21, Compose Multiplatform 1.12.2 (Material 3 1.9.0), AGP 9.4.0, Gradle 9.7.1, Koin 4.2.2 + Koin Compiler Plugin 1.2.3 (Annotations), Ktor 3.6.1, Room 2.8.5 + KSP 2.3.13, DataStore 1.3.0, Navigation 3 (JetBrains) 1.2.0, kotlinx.serialization 1.12.0, kotlinx-datetime 0.8.0, Kermit 2.2.0, Turbine 1.2.1.
 
 **Spec:** `PBSF/README.md`, `PBSF/CLAUDE.md`, `PBSF/docs/ARCHITECTURE.md`, `PBSF/docs/API.md` (Part 1, A1–A4), `PBSF/docs/DOMAIN.md` §1–2.
 
