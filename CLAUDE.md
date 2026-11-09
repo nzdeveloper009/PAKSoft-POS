@@ -32,7 +32,7 @@ If a task needs a rule these docs don't cover, read the legacy code (`../pbsf.or
 - No `!!`. No `GlobalScope`. No `runBlocking` outside tests. Always rethrow `CancellationException`.
 - Coroutines: inject `AppDispatchers`; never hard-code `Dispatchers.IO` outside `core:database` builder setup.
 - Immutable UI state: `data class XxxUiState` with defaults; actions as `sealed interface XxxAction`; one-off effects via `Channel` → `Flow`.
-- ViewModels: `@KoinViewModel`, expose `StateFlow` built with `stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), initial)`, a single `onAction(action)` entry.
+- ViewModels: `@KoinViewModel`, expose `StateFlow` built with `stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), initial)`, a single `onAction(action)` entry. Exception: the root and session-gate ViewModels (`AppViewModel`, `MainViewModel`, `LoginViewModel`) collect eagerly on purpose, because they outlive screens.
 - Composables: `XxxRoute` (gets the ViewModel via a `koinViewModel()` default parameter, handles effects and navigation callbacks) + `XxxScreen` (stateless) + at least one `@Preview` of `XxxScreen`.
 - Collect with `collectAsStateWithLifecycle()`.
 - All user-visible text in `composeResources/values/strings.xml` of the owning module; ViewModels emit `UiText`. Write apostrophes plainly (`isn't`): Compose resources don't unescape Android-style `\'`.
@@ -59,7 +59,7 @@ Navigation 3 (`ARCHITECTURE.md` §7). Each feature exposes `fun EntryProviderSco
 
 - Reads come from Room `Flow`s; `refresh()` fetches, maps and upserts in one transaction.
 - Writes in Phase 1 go to the API; on success upsert the returned resource. Keep the same `client_uuid` across retries of one user action.
-- Map Ktor failures and error envelopes to `AppError` only in `core:network` (`safeApiCall`).
+- Map Ktor failures and error envelopes to `AppError` only in `core:network` (`ApiCaller.call` / `callUnit`).
 - DTO properties always carry `@SerialName("snake_case")`. Money fields use `MoneySerializer`. Enums decode unknown values to `Unknown`.
 - Room: money columns are `Long` paisa; reads return `Flow`; writes use `@Upsert`/`@Transaction`; schemas exported to `core/database/schemas`.
 
