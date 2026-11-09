@@ -148,7 +148,7 @@ interface SalesRepository {
   - `HttpTimeout` (connect 15 s, request 30 s; uploads 120 s per request)
   - `DefaultRequest`: `Accept`, `Accept-Language`, `User-Agent`, `X-Device-Id`
   - Base URL resolved **per request** from the active shop (`ActiveShopProvider`), never baked into the client, so switching shop needs no new client
-  - `Auth { bearer { loadTokens { tokenStore.token()?.let { BearerTokens(it, null) } } } }` with no refresh (Sanctum tokens don't refresh); a `401` → `AppError.Unauthenticated`
+  - A small custom plugin adds `Authorization: Bearer <token>` read from `AuthTokenProvider` on every request (no token caching, so switching shop or logging out takes effect immediately); requests marked `SkipAuth` (login) get no header. A `401` → `AppError.Unauthenticated`; no refresh (Sanctum tokens don't refresh)
   - `Logging` only in debug builds, with `sanitizeHeader { it == HttpHeaders.Authorization }`; never log request bodies of `/auth/login`
 - DTOs: `@Serializable` data classes with `@SerialName("snake_case")` on every property; money fields use `MoneySerializer` (string ↔ `Money`).
 - One API class per area (`AuthApi`, `BootstrapApi`, `CatalogApi`, `CustomerApi`, `SalesApi`, `CashRegisterApi`, `LedgerApi`), each a thin `@Singleton` wrapper returning `AppResult<Dto>`.
