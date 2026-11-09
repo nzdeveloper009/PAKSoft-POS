@@ -17,4 +17,4 @@ dependencyResolutionManagement {
 rootProject.name = "PaksoftPos"
 
 include(":composeApp", ":androidApp")
-include(":core:common", ":core:model", ":core:designsystem", ":core:ui", ":core:datastore", ":core:network")
+include(":core:common", ":core:model", ":core:designsystem", ":core:ui", ":core:datastore", ":core:network", ":core:database")
