@@ -57,6 +57,12 @@ class LoginViewModelTest {
         assertEquals("Super Madina Solar Fan", newVm().state.value.shopName)
     }
 
+    @Test fun `shows the shop id and host of the logged out shop`() = runTest {
+        val state = newVm().state.value
+        assertEquals("smf", state.shopId)
+        assertEquals("pbsf.org.pk/smf", state.shopHost)
+    }
+
     @Test fun `demo shop shows the demo hint`() = runTest {
         assertEquals(false, newVm().state.value.isDemoShop)
         fake = FakeSessionRepository(initial = SessionState.LoggedOut(Shops.demo, null))
@@ -156,5 +162,15 @@ class LoginViewModelTest {
         fake.state.value = SessionState.LoggedOut(TestData.local, null)
         assertEquals("", vm.state.value.login)
         assertEquals("Local API (dev)", vm.state.value.shopName)
+        assertEquals("local", vm.state.value.shopId)
+        assertEquals("local", vm.state.value.shopHost)
+    }
+
+    @Test fun `a successful login keeps the button loading while home takes over`() = runTest {
+        val vm = newVm()
+        vm.fill()
+        vm.onAction(Submit)
+        assertEquals(1, fake.loginCalls.size)
+        assertTrue(vm.state.value.isSubmitting)
     }
 }

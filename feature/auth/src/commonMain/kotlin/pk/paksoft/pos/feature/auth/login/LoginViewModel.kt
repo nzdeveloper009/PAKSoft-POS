@@ -15,6 +15,7 @@ import pk.paksoft.pos.core.model.SessionNotice
 import pk.paksoft.pos.core.model.SessionState
 import pk.paksoft.pos.core.model.Shops
 import pk.paksoft.pos.core.ui.UiText
+import pk.paksoft.pos.core.ui.shopHost
 import pk.paksoft.pos.core.ui.toUiText
 import pk.paksoft.pos.feature.auth.resources.Res
 import pk.paksoft.pos.feature.auth.resources.login_error_login_required
@@ -43,7 +44,9 @@ class LoginViewModel(private val session: SessionRepository) : ViewModel() {
         shopId = loggedOut.shop.id
         _state.update {
             it.copy(
+                shopId = loggedOut.shop.id,
                 shopName = loggedOut.shop.displayName,
+                shopHost = shopHost(loggedOut.shop.apiBaseUrl),
                 isDemoShop = loggedOut.shop.id == Shops.DEMO_ID,
                 login = if (sameShop) it.login else "",
                 password = "",
@@ -83,8 +86,9 @@ class LoginViewModel(private val session: SessionRepository) : ViewModel() {
         _state.update { it.copy(isSubmitting = true, loginError = null, passwordError = null, banner = null) }
         viewModelScope.launch {
             when (val result = session.login(login, current.password)) {
-                // The session gate reacts to SessionState; nothing to navigate here.
-                is AppResult.Success -> _state.update { it.copy(isSubmitting = false) }
+                // The session gate swaps in the home; the button stays a loading circle while this screen fades
+                // out. onLoggedOut resets it when the session comes back here.
+                is AppResult.Success -> Unit
                 is AppResult.Failure -> _state.update { it.withFailure(result.error) }
             }
         }

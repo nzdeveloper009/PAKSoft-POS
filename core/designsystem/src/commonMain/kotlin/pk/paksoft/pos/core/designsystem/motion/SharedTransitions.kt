@@ -55,13 +55,35 @@ fun Modifier.posSharedElement(key: Any): Modifier {
     }
 }
 
+/** How the content of a [posSharedBounds] follows its moving bounds. */
+enum class PosSharedResize {
+    /**
+     * The content keeps its final layout and is scaled to the moving bounds. For text that changes size between the
+     * two screens (a shop name in a card and in a header): it never re-wraps or ellipsizes mid-flight.
+     */
+    Scale,
+
+    /**
+     * The content is laid out again at each frame's size, so a clip and background placed after the modifier fill the
+     * moving bounds and keep their corners. For a container growing into another (a shop card into the login header).
+     */
+    Remeasure,
+}
+
+/** The Compose resize mode behind each [PosSharedResize]. */
+internal fun PosSharedResize.resizeMode(): SharedTransitionScope.ResizeMode = when (this) {
+    PosSharedResize.Scale -> SharedTransitionScope.ResizeMode.scaleToBounds()
+    PosSharedResize.Remeasure -> SharedTransitionScope.ResizeMode.RemeasureToBounds
+}
+
 /**
  * Marks a container whose bounds grow or shrink into the container with the same [key] on the next screen
  * (different content, e.g. a shop card becoming the login header): the bounds move with the `spatial` spring and the
- * two contents cross-fade with `effects`. Does nothing without the scopes (previews) or with reduced motion.
+ * two contents cross-fade with `effects`; [resize] says whether the contents scale or are laid out again. Put the
+ * clip and background after this modifier. Does nothing without the scopes (previews) or with reduced motion.
  */
 @Composable
-fun Modifier.posSharedBounds(key: Any): Modifier {
+fun Modifier.posSharedBounds(key: Any, resize: PosSharedResize = PosSharedResize.Scale): Modifier {
     val sharedScope = LocalSharedTransitionScope.current
     val visibilityScope = LocalPosAnimatedVisibilityScope.current
     val motion = PosTheme.motion
@@ -74,6 +96,7 @@ fun Modifier.posSharedBounds(key: Any): Modifier {
             enter = fadeIn(motion.effects()),
             exit = fadeOut(motion.effects()),
             boundsTransform = BoundsTransform { _, _ -> motion.spatial() },
+            resizeMode = resize.resizeMode(),
         )
     }
 }

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="more_title">More</string>
-    <string name="more_signed_in_as">Signed in as %1$s (%2$s)</string>
-    <string name="more_shop">Shop: %1$s</string>
+    <string name="more_signed_in_as">Signed in as</string>
     <string name="more_refresh">Refresh shop data</string>
+    <string name="more_refresh_hint">Reload the shop's settings and lists.</string>
     <string name="more_refreshed">Shop data updated.</string>
     <string name="more_switch_shop">Switch shop</string>
+    <string name="more_switch_shop_hint">Sign out here and pick another shop.</string>
     <string name="more_logout">Log out</string>
 </resources>

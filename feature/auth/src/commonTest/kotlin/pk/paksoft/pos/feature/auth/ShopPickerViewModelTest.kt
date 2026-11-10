@@ -31,6 +31,12 @@ class ShopPickerViewModelTest {
         assertEquals(false, shops.first { it.id == "smf" }.isDevelopment)
     }
 
+    @Test fun `items carry the shop host`() = runTest {
+        val shops = ShopPickerViewModel(fake).state.value.shops
+        assertEquals("pbsf.org.pk/smf", shops.first { it.id == "smf" }.host)
+        assertEquals("pos.mummyandme.com.pk", shops.first { it.id == "mummyandme" }.host)
+    }
+
     @Test fun `clicking a shop selects it`() = runTest {
         val vm = ShopPickerViewModel(fake)
         vm.onAction(ShopPickerAction.ShopClicked("bsf"))

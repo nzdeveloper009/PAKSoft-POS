@@ -8,11 +8,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 import pk.paksoft.pos.core.data.SessionRepository
+import pk.paksoft.pos.core.ui.shopHost
 
 @KoinViewModel
 class ShopPickerViewModel(private val session: SessionRepository) : ViewModel() {
     private val _state = MutableStateFlow(
-        ShopPickerUiState(session.shops.map { ShopItem(it.id, it.displayName, it.isDevelopment) }),
+        ShopPickerUiState(
+            session.shops.map { ShopItem(it.id, it.displayName, shopHost(it.apiBaseUrl), it.isDevelopment) },
+        ),
     )
     val state: StateFlow<ShopPickerUiState> = _state.asStateFlow()
 

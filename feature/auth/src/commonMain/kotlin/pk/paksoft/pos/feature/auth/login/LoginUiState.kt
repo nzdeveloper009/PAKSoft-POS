@@ -2,8 +2,11 @@ package pk.paksoft.pos.feature.auth.login
 
 import pk.paksoft.pos.core.ui.UiText
 
+/** [shopId] keys the shop's identity and shared elements; [shopHost] is its address (`pbsf.org.pk/smf`). */
 data class LoginUiState(
+    val shopId: String = "",
     val shopName: String = "",
+    val shopHost: String = "",
     val isDemoShop: Boolean = false,
     val login: String = "",
     val password: String = "",

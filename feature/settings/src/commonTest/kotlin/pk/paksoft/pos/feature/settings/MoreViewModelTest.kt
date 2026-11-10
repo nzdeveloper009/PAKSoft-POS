@@ -43,6 +43,35 @@ class MoreViewModelTest {
         assertEquals("Super madina Fan", state.shopName)
     }
 
+    @Test fun `shows the shop id and host`() = runTest {
+        val state = MoreViewModel(session, bootstrap).state.value
+        assertEquals("smf", state.shopId)
+        assertEquals("pbsf.org.pk/smf", state.shopHost)
+    }
+
+    @Test fun `logging out keeps the last user and shop while the screen leaves`() = runTest {
+        bootstrap.settingsFlow.value = TestData.shopSettings()
+        val vm = MoreViewModel(session, bootstrap)
+        // Logout clears the shop data first, then the session ends; More is still animating out meanwhile.
+        bootstrap.settingsFlow.value = null
+        session.state.value = SessionState.LoggedOut(TestData.smf, null)
+        val state = vm.state.value
+        assertEquals("cashier1", state.userName)
+        assertEquals("Admin", state.roleName)
+        assertEquals("Super madina Fan", state.shopName)
+        assertEquals("smf", state.shopId)
+        assertEquals("pbsf.org.pk/smf", state.shopHost)
+    }
+
+    @Test fun `switching shop keeps the last user and shop while the screen leaves`() = runTest {
+        val vm = MoreViewModel(session, bootstrap)
+        session.state.value = SessionState.NoShop
+        val state = vm.state.value
+        assertEquals("cashier1", state.userName)
+        assertEquals("Super Madina Solar Fan", state.shopName)
+        assertEquals("smf", state.shopId)
+    }
+
     @Test fun `falls back to shop display name without cached settings`() = runTest {
         val vm = MoreViewModel(session, bootstrap)
         assertEquals("Super Madina Solar Fan", vm.state.value.shopName)

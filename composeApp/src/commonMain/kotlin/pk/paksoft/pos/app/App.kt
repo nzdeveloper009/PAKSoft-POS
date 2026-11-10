@@ -55,7 +55,8 @@ fun App(vm: AppViewModel = koinViewModel()) {
                         when (current) {
                             SessionState.Starting -> LoadingState()
                             SessionState.NoShop -> SafeArea { ShopPickerRoute() }
-                            is SessionState.LoggedOut -> SafeArea { key(current.shop.id) { LoginRoute() } }
+                            // The login draws its shop header under the status bar and handles insets itself.
+                            is SessionState.LoggedOut -> key(current.shop.id) { LoginRoute() }
                             is SessionState.LoggedIn -> MainScaffold(current.session)
                         }
                     }
