@@ -11,7 +11,7 @@ android-minSdk = "26"
 
 # Compose
 compose-multiplatform = "1.12.2"
-compose-material3 = "1.9.0"          # org.jetbrains.compose.material3
+compose-material3 = "1.12.0-alpha03"          # org.jetbrains.compose.material3
 compose-material-icons = "1.7.3"     # org.jetbrains.compose.material:material-icons-core
 androidx-activity = "1.13.0"
 jb-lifecycle = "2.11.0"              # org.jetbrains.androidx.lifecycle

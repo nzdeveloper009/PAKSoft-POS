@@ -77,7 +77,7 @@ fun MoreScreen(state: MoreUiState, onAction: (MoreAction) -> Unit) {
                 OutlinedButton(
                     onClick = { onAction(MoreAction.Logout) },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PosTheme.colors.danger),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                 ) { Text(stringResource(Res.string.more_logout)) }
             }
         }

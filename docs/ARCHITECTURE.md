@@ -378,26 +378,20 @@ Phase 0 needs only the navigation switch, done with a 600 dp width breakpoint (`
 
 ## 12. Design system (`core:designsystem`)
 
-The app should feel like the web app: same purple, same POS button colors, same font. Source: `smf/public/css/custom-default.css` and `smf/resources/views/sale/pos.blade.php`.
+Phase 1 look (spec: `docs/superpowers/specs/2026-11-10-phase1-look-and-motion-design.md`): ledger green on warm paper, Material 3 Expressive. `PosTheme(darkTheme)` wraps `MaterialExpressiveTheme` with our light/dark `ColorScheme`s, `MotionScheme.expressive()`, `PosShapes` and `posTypography()`. `@OptIn(ExperimentalMaterial3ExpressiveApi::class)` appears only in `core:designsystem`; features call our wrappers.
 
-| Token | Light | Use |
+| Token | Where | Notes |
 |---|---|---|
-| `primary` | `#7C5CC4` | app bar actions, selected nav, primary buttons, POS button, active fields |
-| `primaryDark` | `#6244A6` | pressed states, text on light purple |
-| `primaryContainer` | `#E4E6FC` | selected rows, chips |
-| `background` | `#FAFBFE` | screen background (web side nav and pages) |
-| `surface` | `#FFFFFF` | cards, sheets |
-| `success` | `#28A745` | Completed / Paid badges |
-| `warning` | `#FFC107` | Draft / Partial badges |
-| `danger` | `#DC3545` | Pending / Due badges, delete |
-| `info` | `#17A2B8` | secondary actions (web "Brand" tab) |
-
-POS payment button colors (exact web values): Card `#0984E3` · Cash `#00CEC9` · PayPal `#213170` · Draft `#E28D02` · Cheque `#FD7272` · Gift card `#5F27CD` · Deposit `#B33771` · Cancel `#D63031` · Recent transactions `#FFC107`. POS category tabs: Category `#7C5CC4`, Brand `#17A2B8`, Featured `#DC3545`.
+| Scheme colours | `MaterialTheme.colorScheme` (`PosLightColorScheme`, `PosDarkColorScheme`) | primary `#0B6B4F` light / `#7EDAB3` dark; errors use `error*`, success is primary. Every text pair is AA, checked by `ContrastTest` |
+| Extended colours | `PosTheme.colors` (`PosExtendedColors`) | `due`, `dueContainer`/`onDueContainer`, `paidContainer`/`onPaidContainer`, `chartIn`, `chartOut` |
+| Type | `MaterialTheme.typography` + `PosTheme.typography` (`moneyLarge/Medium/Small`, tabular figures) | Nunito variable, weights 400-900 |
+| Shape | `MaterialTheme.shapes` (`PosShapes`: 8/12/16/24/28 dp) | |
+| Motion | `PosTheme.motion` (`PosMotion`) | spring tokens `fastSpatial`, `spatial`, `slowSpatial`, `fastEffects`, `effects`, `slowEffects`, `bouncy`, `countUp`; `staggerStepMillis`, `enterOffset`. Reads the OS reduce-motion setting through `rememberReduceMotion()` (`expect`/`actual`): spatial specs snap, effects become a 120 ms tween |
+| Shop identity | `ShopBrand.forShop(id, displayName)` and `ShopBrand.colors()` | initials, `ShopShape` (`polygon()` gives the `MaterialShapes` polygon) and light/dark colour pairs for `smf`, `bsf`, `mummyandme`, `demo`, other. Shown on the shop card, login header and signed-in header only; buttons, charts and money stay green |
 
 - **Font:** Nunito (the web's font), bundled in `core:designsystem/src/commonMain/composeResources/font/`.
-- Dark theme: derive from the same hues (primary lightened to about `#A48AE6`); not a straight inversion.
-- Spacing scale 4/8/12/16/24/32 dp; corner radius 8 dp for cards, 6 dp for inputs, full for chips.
-- Every color goes through `PosTheme`; no literal colors in feature code.
+- Spacing scale 4/8/12/16/24/32 dp.
+- Every colour, duration, easing and spring goes through `PosTheme`; no literals in feature code.
 - Components to build first: `PosTopBar`, `PosButton`, `PaymentButton`, `StatusBadge`, `MoneyText`, `KpiTile` (dashboard), `SearchField` (with scan action), `ProductTile` (POS grid), `CartLineRow`, `EmptyState`, `ErrorBanner`, `LoadingState`.
 
 ## 13. Formatting
@@ -424,7 +418,7 @@ kotlin = "2.4.21"
 agp = "9.4.0"
 ksp = "2.3.13"                      # Room only; confirm Kotlin 2.4 support in KSP release notes
 compose-multiplatform = "1.12.2"
-compose-material3 = "1.9.0"         # org.jetbrains.compose.material3
+compose-material3 = "1.12.0-alpha03"  # org.jetbrains.compose.material3
 compose-material3-adaptive = "1.3.0"  # planned; not in the catalog yet
 compose-material-icons = "1.7.3"    # org.jetbrains.compose.material:material-icons-core
 androidx-activity-compose = "1.13.0"

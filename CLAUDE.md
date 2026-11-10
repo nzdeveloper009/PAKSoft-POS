@@ -37,6 +37,7 @@ If a task needs a rule these docs don't cover, read the legacy code (`../pbsf.or
 - Collect with `collectAsStateWithLifecycle()`.
 - All user-visible text in `composeResources/values/strings.xml` of the owning module; ViewModels emit `UiText`. Write apostrophes plainly (`isn't`): Compose resources don't unescape Android-style `\'`.
 - Colors, type, shapes and spacing only from `PosTheme` (`core:designsystem`). No literal colors in features.
+- Motion only from `PosTheme.motion`; shared elements only through `posSharedElement`/`posSharedBounds`.
 - Lists: `LazyColumn`/`LazyVerticalGrid` with stable `key`s.
 - Every screen handles four states: loading, content, empty, error (cached content + error banner when a refresh fails).
 
