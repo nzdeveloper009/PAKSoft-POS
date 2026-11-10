@@ -16,3 +16,6 @@ fun backStackFor(destination: TopLevelDestination): List<NavKey> =
 /** The tab to highlight: the one owning the last top-level key on the stack (screens above it keep it selected). */
 fun selectedDestination(stack: List<NavKey>): TopLevelDestination? =
     stack.asReversed().firstNotNullOfOrNull { key -> TopLevelDestination.entries.firstOrNull { it.key == key } }
+
+/** A tab's own screen, as opposed to a screen opened on top of a tab. */
+fun isTopLevelKey(key: NavKey): Boolean = TopLevelDestination.entries.any { it.key == key }

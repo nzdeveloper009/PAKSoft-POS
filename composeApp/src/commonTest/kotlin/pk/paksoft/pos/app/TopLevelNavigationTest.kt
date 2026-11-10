@@ -3,9 +3,12 @@ package pk.paksoft.pos.app
 import androidx.navigation3.runtime.NavKey
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import pk.paksoft.pos.app.main.TopLevelDestination
 import pk.paksoft.pos.app.main.backStackFor
+import pk.paksoft.pos.app.main.isTopLevelKey
 import pk.paksoft.pos.app.main.selectedDestination
 import pk.paksoft.pos.app.navigation.DashboardKey
 import pk.paksoft.pos.app.navigation.SalesKey
@@ -35,5 +38,10 @@ class TopLevelNavigationTest {
 
     @Test fun `empty stack has no selected tab`() {
         assertNull(selectedDestination(emptyList()))
+    }
+
+    @Test fun `every tab key is top level and a screen above a tab is not`() {
+        TopLevelDestination.entries.forEach { assertTrue(isTopLevelKey(it.key), "${it.name} is a tab") }
+        assertFalse(isTopLevelKey(DetailKey))
     }
 }

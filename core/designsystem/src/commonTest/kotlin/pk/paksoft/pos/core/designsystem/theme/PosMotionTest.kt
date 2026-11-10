@@ -64,4 +64,19 @@ class PosMotionTest {
         assertEquals(1200, tween.durationMillis)
         assertEquals(LinearEasing, tween.easing)
     }
+
+    @Test
+    fun `gesture spec is linear so a seeked transition follows the finger`() {
+        val tween = assertIs<TweenSpec<Float>>(PosMotion(reduced = false).gesture<Float>())
+        assertEquals(300, tween.durationMillis)
+        assertEquals(300, PosMotion(reduced = false).gestureMillis)
+        assertEquals(LinearEasing, tween.easing)
+    }
+
+    @Test
+    fun `reduced motion shortens the gesture spec to the effects tween`() {
+        val m = PosMotion(reduced = true)
+        assertEquals(120, assertIs<TweenSpec<Float>>(m.gesture<Float>()).durationMillis)
+        assertEquals(120, m.gestureMillis)
+    }
 }

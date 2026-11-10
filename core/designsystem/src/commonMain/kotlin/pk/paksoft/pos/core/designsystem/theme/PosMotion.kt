@@ -22,6 +22,9 @@ class PosMotion(val reduced: Boolean) {
     /** Delay between neighbouring digits of a rolling number, right-most digit first. */
     val rollingStaggerMillis: Int = 18
 
+    /** Length of a gesture-driven timeline ([gesture]); the short effects tween with [reduced] on. */
+    val gestureMillis: Int = if (reduced) REDUCED_FADE_MILLIS else GESTURE_MILLIS
+
     fun <T> fastSpatial(): FiniteAnimationSpec<T> = spatialSpring(0.6f, 800f)
     fun <T> spatial(): FiniteAnimationSpec<T> = spatialSpring(0.8f, 380f)
     fun <T> slowSpatial(): FiniteAnimationSpec<T> = spatialSpring(0.8f, 200f)
@@ -34,6 +37,13 @@ class PosMotion(val reduced: Boolean) {
 
     /** Numbers counting up. Decorative: callers skip the count when [reduced]. */
     fun <T> countUp(): FiniteAnimationSpec<T> = effectsSpring(1.0f, 120f)
+
+    /**
+     * A transition a gesture seeks, such as predictive back: linear, so the animation follows the finger one to one
+     * (a spring would do most of its travel in the first part of the swipe), and short, since only the part left
+     * after the user lets go plays in real time.
+     */
+    fun <T> gesture(): FiniteAnimationSpec<T> = tween(gestureMillis, easing = LinearEasing)
 
     /** One sweep of the skeleton shimmer. Callers draw a static block instead when [reduced]. */
     fun <T> shimmer(): InfiniteRepeatableSpec<T> =
@@ -48,5 +58,6 @@ class PosMotion(val reduced: Boolean) {
     private companion object {
         const val REDUCED_FADE_MILLIS = 120
         const val SHIMMER_MILLIS = 1200
+        const val GESTURE_MILLIS = 300
     }
 }
