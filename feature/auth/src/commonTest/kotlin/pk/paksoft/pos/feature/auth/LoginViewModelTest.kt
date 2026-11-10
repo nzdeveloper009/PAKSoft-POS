@@ -4,6 +4,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
@@ -172,5 +173,34 @@ class LoginViewModelTest {
         vm.onAction(Submit)
         assertEquals(1, fake.loginCalls.size)
         assertTrue(vm.state.value.isSubmitting)
+    }
+
+    @Test fun `logging out after a successful login brings the button back`() = runTest {
+        val vm = newVm()
+        vm.fill()
+        vm.onAction(Submit)
+        fake.state.value = SessionState.LoggedIn(TestData.smf, TestData.userSession())
+        fake.state.value = SessionState.LoggedOut(TestData.smf, null)
+        assertFalse(vm.state.value.isSubmitting)
+    }
+
+    @Test fun `switch shop is ignored while a login is running`() = runTest {
+        val vm = newVm()
+        fake.loginGate = CompletableDeferred()
+        vm.fill()
+        vm.onAction(Submit)
+        vm.onAction(ChangeShop)
+        assertEquals(0, fake.switchShopCalls)
+        fake.loginGate!!.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(0, fake.switchShopCalls)
+    }
+
+    @Test fun `switch shop is ignored after a successful login while home takes over`() = runTest {
+        val vm = newVm()
+        vm.fill()
+        vm.onAction(Submit)
+        vm.onAction(ChangeShop)
+        assertEquals(0, fake.switchShopCalls)
     }
 }

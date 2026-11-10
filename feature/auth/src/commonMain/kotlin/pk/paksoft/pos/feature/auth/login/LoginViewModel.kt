@@ -69,8 +69,17 @@ class LoginViewModel(private val session: SessionRepository) : ViewModel() {
                 _state.update { it.copy(password = action.value, passwordError = null, banner = null) }
             LoginAction.TogglePasswordVisibility -> _state.update { it.copy(passwordVisible = !it.passwordVisible) }
             LoginAction.Submit -> submit()
-            LoginAction.ChangeShop -> viewModelScope.launch { session.switchShop() }
+            LoginAction.ChangeShop -> changeShop()
         }
+    }
+
+    /**
+     * Ignored while a login runs or has just succeeded (the button stays loading while home takes over): switching
+     * then would end the session being created.
+     */
+    private fun changeShop() {
+        if (_state.value.isSubmitting) return
+        viewModelScope.launch { session.switchShop() }
     }
 
     private fun submit() {

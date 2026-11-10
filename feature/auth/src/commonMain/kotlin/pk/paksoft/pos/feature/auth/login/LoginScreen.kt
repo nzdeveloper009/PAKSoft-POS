@@ -1,8 +1,8 @@
 package pk.paksoft.pos.feature.auth.login
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,16 +14,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -35,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -47,7 +46,7 @@ import pk.paksoft.pos.core.designsystem.component.PosButton
 import pk.paksoft.pos.core.designsystem.component.PosTextField
 import pk.paksoft.pos.core.designsystem.component.ShopAvatar
 import pk.paksoft.pos.core.designsystem.component.enterStagger
-import pk.paksoft.pos.core.designsystem.component.posClickable
+import pk.paksoft.pos.core.designsystem.component.pressScale
 import pk.paksoft.pos.core.designsystem.icon.PosIcons
 import pk.paksoft.pos.core.designsystem.motion.PosSharedResize
 import pk.paksoft.pos.core.designsystem.motion.posSharedBounds
@@ -117,10 +116,12 @@ private fun ShopHeader(state: LoginUiState, brand: ShopBrand, onSwitchShop: () -
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
+            // Off while a login runs or has just succeeded: switching then would end the session being created.
             IconAction(
                 icon = PosIcons.Back,
                 contentDescription = stringResource(Res.string.login_switch_shop),
                 tint = colors.onContainer,
+                enabled = !state.isSubmitting,
                 onClick = onSwitchShop,
             )
         }
@@ -201,7 +202,10 @@ private fun LoginForm(state: LoginUiState, onAction: (LoginAction) -> Unit, modi
     }
 }
 
-/** A 48 dp round icon button with the icon-button squeeze. */
+/**
+ * A Material icon button (48 dp touch target, ripple) in [tint] with the icon-button squeeze. Disabled, it ignores
+ * taps and dims its icon the Material way.
+ */
 @Composable
 private fun IconAction(
     icon: ImageVector,
@@ -210,26 +214,21 @@ private fun IconAction(
     onClick: () -> Unit,
     enabled: Boolean = true,
 ) {
-    Box(
-        modifier = Modifier
-            .size(IconActionSize)
-            .posClickable(
-                enabled = enabled,
-                pressedScale = ICON_PRESSED_SCALE,
-                shape = CircleShape,
-                role = Role.Button,
-                onClick = onClick,
-            ),
-        contentAlignment = Alignment.Center,
+    val interactionSource = remember { MutableInteractionSource() }
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.pressScale(interactionSource, ICON_PRESSED_SCALE),
+        enabled = enabled,
+        colors = IconButtonDefaults.iconButtonColors(contentColor = tint),
+        interactionSource = interactionSource,
     ) {
-        Icon(icon, contentDescription = contentDescription, tint = tint)
+        Icon(icon, contentDescription = contentDescription)
     }
 }
 
 private val MaxContentWidth = 420.dp
 private val HeaderAvatarSize = 84.dp
 private val HeaderShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
-private val IconActionSize = 48.dp
 private const val ICON_PRESSED_SCALE = 0.88f
 
 private val SmfState = LoginUiState(

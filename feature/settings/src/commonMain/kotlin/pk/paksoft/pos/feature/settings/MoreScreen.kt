@@ -114,7 +114,10 @@ fun MoreScreen(state: MoreUiState, onAction: (MoreAction) -> Unit) {
 /** The shop (avatar, name, address) and the user signed in to it, on the shop's container colour. */
 @Composable
 private fun SignedInCard(state: MoreUiState, modifier: Modifier = Modifier) {
-    val brand = remember(state.shopId, state.shopName) { ShopBrand.forShop(state.shopId, state.shopName) }
+    // Built from the shop list's name, as on the shop picker and login, so the shop wears the same identity.
+    val brand = remember(state.shopId, state.shopDisplayName) {
+        ShopBrand.forShop(state.shopId, state.shopDisplayName)
+    }
     val colors = brand.colors()
     Column(
         modifier = modifier
@@ -243,6 +246,7 @@ private val PreviewState = MoreUiState(
     roleName = "Admin",
     shopId = "smf",
     shopName = "Super madina Fan",
+    shopDisplayName = "Super Madina Solar Fan",
     shopHost = "pbsf.org.pk/smf",
     message = UiText.Res(Res.string.more_refreshed),
 )
@@ -267,6 +271,7 @@ private fun MoreScreenErrorPreview() {
             state = PreviewState.copy(
                 shopId = "mummyandme",
                 shopName = "Mummy & Me",
+                shopDisplayName = "Mummy & Me",
                 shopHost = "pos.mummyandme.com.pk",
                 message = UiText.Raw("No internet connection."),
                 isMessageError = true,
@@ -284,6 +289,7 @@ private fun MoreScreenRefreshingDarkPreview() {
             state = PreviewState.copy(
                 shopId = "bsf",
                 shopName = "BSF",
+                shopDisplayName = "BSF",
                 shopHost = "pbsf.org.pk/bsf",
                 message = null,
                 isRefreshing = true,

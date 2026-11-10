@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import pk.paksoft.pos.core.common.AppError
 import pk.paksoft.pos.core.common.AppResult
+import pk.paksoft.pos.core.designsystem.theme.ShopBrand
 import pk.paksoft.pos.core.model.SessionState
 import pk.paksoft.pos.core.testing.FakeBootstrapRepository
 import pk.paksoft.pos.core.testing.FakeSessionRepository
@@ -70,6 +71,35 @@ class MoreViewModelTest {
         assertEquals("cashier1", state.userName)
         assertEquals("Super Madina Solar Fan", state.shopName)
         assertEquals("smf", state.shopId)
+    }
+
+    @Test fun `signing in to another shop after the hold drops the old user and title`() = runTest {
+        bootstrap.settingsFlow.value = TestData.shopSettings()
+        val vm = MoreViewModel(session, bootstrap)
+        bootstrap.settingsFlow.value = null
+        session.state.value = SessionState.LoggedOut(TestData.smf, null)
+        val owner = TestData.userSession(name = "owner", roleName = "Owner")
+        session.state.value = SessionState.LoggedIn(TestData.local, owner)
+        val state = vm.state.value
+        assertEquals("owner", state.userName)
+        assertEquals("Owner", state.roleName)
+        assertEquals("local", state.shopId)
+        assertEquals("Local API (dev)", state.shopName)
+        assertEquals("Local API (dev)", state.shopDisplayName)
+        assertEquals("local", state.shopHost)
+    }
+
+    @Test fun `the avatar identity comes from the shop list name and not the bootstrap title`() = runTest {
+        session.state.value = SessionState.LoggedIn(TestData.local, TestData.userSession())
+        bootstrap.settingsFlow.value = TestData.shopSettings()
+        val state = MoreViewModel(session, bootstrap).state.value
+        assertEquals("Super madina Fan", state.shopName)
+        assertEquals("Local API (dev)", state.shopDisplayName)
+        // The same inputs the shop picker and login use, so the three show the same identity ("LO").
+        assertEquals(
+            ShopBrand.forShop(TestData.local.id, TestData.local.displayName),
+            ShopBrand.forShop(state.shopId, state.shopDisplayName),
+        )
     }
 
     @Test fun `falls back to shop display name without cached settings`() = runTest {

@@ -50,6 +50,7 @@ class MoreViewModel(
             roleName = loggedIn.session.user.roleName,
             shopId = shop.id,
             shopName = settings?.title ?: lastTitle ?: shop.displayName,
+            shopDisplayName = shop.displayName,
             shopHost = shopHost(shop.apiBaseUrl),
         )
     }
