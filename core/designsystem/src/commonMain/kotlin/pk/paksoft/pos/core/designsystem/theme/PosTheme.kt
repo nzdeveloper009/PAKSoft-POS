@@ -1,5 +1,6 @@
 package pk.paksoft.pos.core.designsystem.theme
 
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
@@ -25,6 +26,7 @@ fun PosTheme(
 ) {
     val reduced = rememberReduceMotion()
     val motion = remember(reduced) { PosMotion(reduced) }
+    val motionScheme = remember(motion) { posMotionScheme(motion) }
     val typography = posTypography()
     val extras = remember(typography) { posTypographyExtras(typography) }
     CompositionLocalProvider(
@@ -35,12 +37,31 @@ fun PosTheme(
     ) {
         MaterialExpressiveTheme(
             colorScheme = if (darkTheme) PosDarkColorScheme else PosLightColorScheme,
-            motionScheme = MotionScheme.expressive(),
+            motionScheme = motionScheme,
             shapes = PosShapes,
             typography = typography,
             content = content,
         )
     }
+}
+
+/**
+ * The motion scheme Material 3 components use (button shape morph, loading indicator, nav indicator).
+ * Expressive springs normally; with reduced motion it hands out [PosMotion]'s specs, so spatial motion snaps and
+ * effects become the short tween, as in our own components.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+internal fun posMotionScheme(motion: PosMotion): MotionScheme =
+    if (motion.reduced) ReducedMotionScheme(motion) else MotionScheme.expressive()
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private class ReducedMotionScheme(private val motion: PosMotion) : MotionScheme {
+    override fun <T> defaultSpatialSpec(): FiniteAnimationSpec<T> = motion.spatial()
+    override fun <T> fastSpatialSpec(): FiniteAnimationSpec<T> = motion.fastSpatial()
+    override fun <T> slowSpatialSpec(): FiniteAnimationSpec<T> = motion.slowSpatial()
+    override fun <T> defaultEffectsSpec(): FiniteAnimationSpec<T> = motion.effects()
+    override fun <T> fastEffectsSpec(): FiniteAnimationSpec<T> = motion.fastEffects()
+    override fun <T> slowEffectsSpec(): FiniteAnimationSpec<T> = motion.slowEffects()
 }
 
 object PosTheme {

@@ -378,7 +378,7 @@ Phase 0 needs only the navigation switch, done with a 600 dp width breakpoint (`
 
 ## 12. Design system (`core:designsystem`)
 
-Phase 1 look (spec: `docs/superpowers/specs/2026-11-10-phase1-look-and-motion-design.md`): ledger green on warm paper, Material 3 Expressive. `PosTheme(darkTheme)` wraps `MaterialExpressiveTheme` with our light/dark `ColorScheme`s, `MotionScheme.expressive()`, `PosShapes` and `posTypography()`. `@OptIn(ExperimentalMaterial3ExpressiveApi::class)` appears only in `core:designsystem`; features call our wrappers.
+Phase 1 look (spec: `docs/superpowers/specs/2026-11-10-phase1-look-and-motion-design.md`): ledger green on warm paper, Material 3 Expressive. `PosTheme(darkTheme)` wraps `MaterialExpressiveTheme` with our light/dark `ColorScheme`s, `MotionScheme.expressive()` (with reduced motion, a scheme built from `PosMotion`'s snaps and 120 ms fades, so M3 components follow the setting too), `PosShapes` and `posTypography()`. `@OptIn(ExperimentalMaterial3ExpressiveApi::class)` appears only in `core:designsystem`; features call our wrappers.
 
 | Token | Where | Notes |
 |---|---|---|
@@ -393,7 +393,7 @@ Phase 1 look (spec: `docs/superpowers/specs/2026-11-10-phase1-look-and-motion-de
 - Spacing scale 4/8/12/16/24/32 dp.
 - Every colour, duration, easing and spring goes through `PosTheme`; no literals in feature code.
 - Built (`component/`, `icon/`): `PosButton(style = Filled | Charge | Tonal | Outlined | Text, large, loading, icon)` (shape morph and squeeze on press; `loading` narrows it into a circle with `PosLoadingIndicator`), `PosFilterChip`, `ShopAvatar(brand, size)`, `RollingText` (odometer digits), `animateCountAsState`, `SkeletonBox` / `Modifier.skeleton(visible)`, `PosTextField`, `PosTopBar`, `EmptyState(title, message, icon)`, `ErrorBanner`, `LoadingState`, and `PosIcons` (the only icon source for features).
-- Press feel for custom tappable surfaces: `Modifier.posClickable(pressedScale) { }` (ripple + `pressScale`; clip to the shape first); `Modifier.pressScale(interactionSource)` for components that own an interaction source. Entrances: `Modifier.enterStagger(index)`. Under reduced motion the squeeze, the entrance, the roll and the count are skipped and the final state shows at once.
+- Press feel for custom tappable surfaces: `Modifier.posClickable(pressedScale, shape) { }.background(color)` (ripple + `pressScale`; the shape is clipped inside the scale so shape, background and ripple shrink together); `Modifier.pressScale(interactionSource)` before the clip for components that own an interaction source. Entrances: `Modifier.enterStagger(index)` for a screen's sections, not lazy-list rows (previews show sections in place). Under reduced motion the squeeze, the entrance, the roll and the count are skipped and the final state shows at once.
 - Components still to build: `StatusBadge`, `MoneyText`, `KpiTile` (dashboard), `SearchField` (with scan action), `ProductTile` (POS grid), `CartLineRow`.
 
 ## 13. Formatting

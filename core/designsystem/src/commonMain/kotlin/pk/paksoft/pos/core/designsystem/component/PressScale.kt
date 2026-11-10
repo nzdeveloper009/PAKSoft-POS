@@ -22,6 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.GraphicsLayerScope
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
@@ -51,19 +53,21 @@ fun Modifier.pressScale(interactionSource: InteractionSource, pressedScale: Floa
 
 /**
  * A ripple plus [pressScale] sharing one interaction source: the press feel for any custom tappable surface.
- * Clip to the surface's shape before this modifier so the ripple follows the shape:
- * `Modifier.clip(shape).posClickable { }.background(color)`.
- * Large cards keep the default 0.97; smaller targets pass 0.95, icon buttons 0.88.
+ * Pass the surface's [shape]: it is clipped inside the scale, so the shape, its background and the ripple shrink
+ * together. Put the background after this modifier: `Modifier.posClickable(shape = shape) { }.background(color)`.
+ * Large cards keep the default 0.97; smaller targets pass 0.95, icon buttons 0.88 with `CircleShape`.
  */
 @Composable
 fun Modifier.posClickable(
     enabled: Boolean = true,
     pressedScale: Float = 0.97f,
+    shape: Shape = RectangleShape,
     role: Role? = null,
     onClick: () -> Unit,
 ): Modifier {
     val interactionSource = remember { MutableInteractionSource() }
     return pressScale(interactionSource, pressedScale)
+        .then(if (shape == RectangleShape) Modifier else Modifier.clip(shape))
         .clickable(
             interactionSource = interactionSource,
             indication = ripple(),
@@ -171,8 +175,7 @@ private fun PosClickableSample() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(MaterialTheme.shapes.extraLarge)
-                .posClickable(onClick = {})
+                .posClickable(shape = MaterialTheme.shapes.extraLarge, onClick = {})
                 .background(MaterialTheme.colorScheme.surfaceContainerLow)
                 .padding(PosSpacing.xl),
         ) {
@@ -182,8 +185,7 @@ private fun PosClickableSample() {
             modifier = Modifier
                 .padding(top = PosSpacing.l)
                 .size(48.dp)
-                .clip(CircleShape)
-                .posClickable(pressedScale = 0.88f, role = Role.Button, onClick = {}),
+                .posClickable(pressedScale = 0.88f, shape = CircleShape, role = Role.Button, onClick = {}),
             contentAlignment = Alignment.Center,
         ) {
             Icon(PosIcons.Refresh, contentDescription = null)

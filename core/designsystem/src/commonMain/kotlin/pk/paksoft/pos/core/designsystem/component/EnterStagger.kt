@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.delay
 import pk.paksoft.pos.core.designsystem.theme.PosSpacing
@@ -24,12 +25,15 @@ import pk.paksoft.pos.core.designsystem.theme.PosTheme
 /**
  * Entrance for the [index]-th section of a screen: on first composition it rises `enterOffset` and fades in with
  * the `spatial` spring, `staggerStepMillis` after the section before it (indexes past 8 wait as long as 8).
- * With reduced motion the section is simply there.
+ * With reduced motion, and in previews, the section is simply there.
+ *
+ * For a screen's sections only, not lazy-list rows: a row that scrolls back into view is composed again and
+ * would replay the entrance.
  */
 @Composable
 fun Modifier.enterStagger(index: Int): Modifier {
     val motion = PosTheme.motion
-    if (motion.reduced) return this
+    if (enterStaggerSkipped(motion.reduced, LocalInspectionMode.current)) return this
     val progress = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         delay(staggerDelayMillis(index, motion.staggerStepMillis, reduced = false).toLong())
@@ -46,6 +50,9 @@ fun Modifier.enterStagger(index: Int): Modifier {
 /** How long section [index] waits before entering: one [stepMillis] per index, at most 8 steps, none when [reduced]. */
 internal fun staggerDelayMillis(index: Int, stepMillis: Int, reduced: Boolean): Int =
     if (reduced) 0 else index.coerceIn(0, MAX_STAGGER_INDEX) * stepMillis
+
+/** Reduced motion and previews (inspection mode) show sections in place, never invisible. */
+internal fun enterStaggerSkipped(reduced: Boolean, inspectionMode: Boolean): Boolean = reduced || inspectionMode
 
 private const val MAX_STAGGER_INDEX = 8
 
