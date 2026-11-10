@@ -1,6 +1,7 @@
 package pk.paksoft.pos.app
 
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterExitState
 import androidx.compose.ui.unit.Density
 import pk.paksoft.pos.core.designsystem.motion.PosTransitions
 import pk.paksoft.pos.core.designsystem.theme.PosMotion
@@ -39,6 +40,14 @@ fun sessionTransition(from: SessionScreen, to: SessionScreen): SessionTransition
     to.ordinal < from.ordinal -> SessionTransition.SharedBack
     else -> SessionTransition.FadeThrough
 }
+
+/**
+ * Whether a gate screen takes taps and Back, given where its `AnimatedContent` transition is heading ([target]).
+ * The screen animating out (heading to `PostExit`) takes none, so a second tap while it leaves can't act again (pick
+ * another shop, log out twice); the screen coming in takes input from its first frame, and an exit that is
+ * interrupted (heading back to `Visible`) takes it again.
+ */
+fun sessionScreenTakesInput(target: EnterExitState): Boolean = target == EnterExitState.Visible
 
 internal fun SessionTransition.contentTransform(motion: PosMotion, density: Density): ContentTransform = when (this) {
     SessionTransition.SharedForward -> PosTransitions.sharedAxisForward(motion, density)

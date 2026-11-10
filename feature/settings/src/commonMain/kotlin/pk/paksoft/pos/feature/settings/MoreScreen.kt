@@ -41,6 +41,7 @@ import pk.paksoft.pos.core.designsystem.component.ShopAvatar
 import pk.paksoft.pos.core.designsystem.component.enterStagger
 import pk.paksoft.pos.core.designsystem.component.posClickable
 import pk.paksoft.pos.core.designsystem.icon.PosIcons
+import pk.paksoft.pos.core.designsystem.theme.PosLayout
 import pk.paksoft.pos.core.designsystem.theme.PosSpacing
 import pk.paksoft.pos.core.designsystem.theme.PosTheme
 import pk.paksoft.pos.core.designsystem.theme.ShopBrand
@@ -69,7 +70,7 @@ fun MoreScreen(state: MoreUiState, onAction: (MoreAction) -> Unit) {
             ) {
                 Column(
                     modifier = Modifier
-                        .widthIn(max = MaxContentWidth)
+                        .widthIn(max = PosLayout.contentMaxWidth)
                         .fillMaxWidth()
                         .padding(start = PosSpacing.l, end = PosSpacing.l, top = PosSpacing.s, bottom = PosSpacing.xl),
                     verticalArrangement = Arrangement.spacedBy(PosSpacing.m),
@@ -237,7 +238,6 @@ private fun ActionCard(
     }
 }
 
-private val MaxContentWidth = 560.dp
 private val AvatarSize = 56.dp
 private val IconBadgeSize = 40.dp
 

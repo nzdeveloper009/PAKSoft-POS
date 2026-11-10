@@ -30,13 +30,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import org.jetbrains.compose.resources.stringResource
 import pk.paksoft.pos.core.designsystem.icon.PosIcons
+import pk.paksoft.pos.core.designsystem.resources.Res
+import pk.paksoft.pos.core.designsystem.resources.button_working
 import pk.paksoft.pos.core.designsystem.theme.PosSpacing
 import pk.paksoft.pos.core.designsystem.theme.PosTheme
 
@@ -55,7 +66,10 @@ enum class PosButtonStyle { Filled, Charge, Tonal, Outlined, Text }
  *
  * While [loading] the button narrows into a circle as tall as itself (56 dp when [large]) with
  * [PosLoadingIndicator] inside and ignores clicks; it widens back when loading ends. Its layout slot keeps its
- * width, so nothing around it moves.
+ * width, so nothing around it moves. Screen readers hear it as busy, not disabled: its label, "Working" and an
+ * indeterminate progress ([busySemantics]).
+ *
+ * The label stays on one line; at a large font scale it ends in an ellipsis rather than being cut mid-letter.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -75,6 +89,7 @@ fun PosButton(
     val collapse by animateFloatAsState(if (loading) 1f else 0f, motion.spatial(), label = "PosButtonCollapse")
     val labelAlpha by animateFloatAsState(if (loading) 0f else 1f, motion.fastEffects(), label = "PosButtonLabel")
     val indicatorAlpha by animateFloatAsState(if (loading) 1f else 0f, motion.effects(), label = "PosButtonIndicator")
+    val workingLabel = stringResource(Res.string.button_working)
     val baseColors = style.colors()
     // Loading disables the button but keeps its colours, so the circle stays in the style's colour.
     val colors = if (loading && enabled) {
@@ -87,7 +102,9 @@ fun PosButton(
     }
 
     Box(
-        modifier = modifier.collapseToCircle({ collapse }, height),
+        modifier = modifier
+            .collapseToCircle({ collapse }, height)
+            .then(if (loading) Modifier.busySemantics(text, workingLabel) else Modifier),
         contentAlignment = Alignment.Center,
         propagateMinConstraints = true,
     ) {
@@ -110,7 +127,13 @@ fun PosButton(
                     Icon(icon, contentDescription = null, modifier = Modifier.size(ButtonDefaults.iconSizeFor(height)))
                     Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(height)))
                 }
-                Text(text, style = ButtonDefaults.textStyleFor(height), maxLines = 1, softWrap = false)
+                Text(
+                    text,
+                    style = ButtonDefaults.textStyleFor(height),
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
         if (loading || indicatorAlpha > 0f) {
@@ -125,6 +148,17 @@ fun PosButton(
 }
 
 private const val LOADING_INDICATOR_FRACTION = 0.75f
+
+/**
+ * A loading button's semantics: one node with its [label], the [working] state and an indeterminate progress, in
+ * place of the inner `Button`'s, which would read "<label>, disabled" (loading disables it to ignore taps).
+ */
+private fun Modifier.busySemantics(label: String, working: String): Modifier = clearAndSetSemantics {
+    contentDescription = label
+    role = Role.Button
+    stateDescription = working
+    progressBarRangeInfo = ProgressBarRangeInfo.Indeterminate
+}
 
 @Composable
 private fun PosButtonStyle.colors(): ButtonColors = when (this) {
@@ -198,8 +232,18 @@ private fun PosButtonSample() {
         PosButton(text = "Switch shop", onClick = {}, style = PosButtonStyle.Outlined)
         PosButton(text = "Cancel", onClick = {}, style = PosButtonStyle.Text)
         PosButton(text = "Log in", onClick = {}, enabled = false)
+        PosButton(
+            text = "Share receipt with the customer",
+            onClick = {},
+            style = PosButtonStyle.Tonal,
+            icon = PosIcons.Share,
+            modifier = Modifier.width(NarrowSampleWidth),
+        )
     }
 }
+
+/** Narrow enough that the sample's long label ends in an ellipsis. */
+private val NarrowSampleWidth = 220.dp
 
 @Preview
 @Composable

@@ -39,6 +39,7 @@ import pk.paksoft.pos.core.designsystem.motion.posSharedElement
 import pk.paksoft.pos.core.designsystem.motion.shopAvatarKey
 import pk.paksoft.pos.core.designsystem.motion.shopCardKey
 import pk.paksoft.pos.core.designsystem.motion.shopNameKey
+import pk.paksoft.pos.core.designsystem.theme.PosLayout
 import pk.paksoft.pos.core.designsystem.theme.PosSpacing
 import pk.paksoft.pos.core.designsystem.theme.PosTheme
 import pk.paksoft.pos.core.designsystem.theme.ShopBrand
@@ -64,7 +65,7 @@ fun ShopPickerScreen(state: ShopPickerUiState, onAction: (ShopPickerAction) -> U
         ) {
             Column(
                 modifier = Modifier
-                    .widthIn(max = MaxContentWidth)
+                    .widthIn(max = PosLayout.formMaxWidth)
                     .fillMaxWidth()
                     .padding(horizontal = PosSpacing.l, vertical = PosSpacing.xl),
                 verticalArrangement = Arrangement.spacedBy(PosSpacing.m),
@@ -161,7 +162,6 @@ private fun DevBadge() {
     )
 }
 
-private val MaxContentWidth = 420.dp
 private val AvatarSize = 52.dp
 
 private val PreviewShops = listOf(

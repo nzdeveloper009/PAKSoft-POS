@@ -19,7 +19,7 @@ If a task needs a rule these docs don't cover, read the legacy code (`../pbsf.or
 2. **Contract first.** Any request/response change goes into `docs/API.md` first, then the PHP side, then the Kotlin DTOs. DTO tests use the JSON examples from `API.md` as fixtures.
 3. **Server owns stock and pricing.** The app's `CartCalculator` mirrors `DOMAIN.md` §5 for display; the server recomputes and can reject. Never move stock logic into the app.
 4. **Money is `Money` (Long paisa).** Never `Double` or `Float` for money in models, entities, DTOs or UI state. JSON money is a 2-decimal string.
-5. **Never write to a production shop** from code, tests or manual checks. Use the Staging shop or Ktor `MockEngine`. Reading production is fine.
+5. **Never write to a production shop** from code, tests or manual checks. Manual checks use the Demo shop (debug builds), the Staging shop, or Ktor `MockEngine`. Reading production is fine.
 6. **No secrets anywhere.** No tokens, passwords or `.env` values in code, logs, fixtures, docs or commits. Tokens live only in `TokenStore`.
 7. **Follow the module rules** in `ARCHITECTURE.md` §2. Features never import other features. DTOs and entities never leave `core:data`.
 8. **Koin: Annotations + Compiler Plugin only** (§DI below). No Koin KSP, no DSL modules, no `KoinComponent` in normal code.
@@ -84,7 +84,8 @@ Navigation 3 (`ARCHITECTURE.md` §7). Each feature exposes `fun EntryProviderSco
 1. Write or update the endpoint in `docs/API.md` (request, response, errors, permission).
 2. Add the JSON example as a fixture in `core/testing` and a DTO decode/encode test.
 3. DTO + API method in `core:network`; mapper + repository method in `core:data`; Room entity/DAO if cached.
-4. Backend: implement per `API.md` Part 4 on **staging**, with a PHPUnit feature test.
+4. Add the endpoint to `DemoServer` (`core/network/.../demo`) with invented sample data, so the screen runs on the Demo shop. `DemoServer.respond` sees only the method and path today; the first endpoint that needs the query or the body adds them.
+5. Backend: implement per `API.md` Part 4 on **staging**, with a PHPUnit feature test.
 
 ### Port a web screen
 

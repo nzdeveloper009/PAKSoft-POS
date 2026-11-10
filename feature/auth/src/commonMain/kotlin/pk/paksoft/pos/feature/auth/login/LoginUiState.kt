@@ -15,7 +15,14 @@ data class LoginUiState(
     val loginError: UiText? = null,
     val passwordError: UiText? = null,
     val banner: UiText? = null,
-)
+) {
+    /**
+     * Whether the header's back arrow and system Back may return to the shop picker: not while a login runs or has
+     * just succeeded (the button stays loading while home takes over), since switching then would end the session
+     * being created.
+     */
+    val canChangeShop: Boolean get() = !isSubmitting
+}
 
 sealed interface LoginAction {
     data class LoginChanged(val value: String) : LoginAction

@@ -1,7 +1,6 @@
 package pk.paksoft.pos.feature.auth.login
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,10 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,8 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -43,10 +36,10 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import pk.paksoft.pos.core.designsystem.component.ErrorBanner
 import pk.paksoft.pos.core.designsystem.component.PosButton
+import pk.paksoft.pos.core.designsystem.component.PosIconButton
 import pk.paksoft.pos.core.designsystem.component.PosTextField
 import pk.paksoft.pos.core.designsystem.component.ShopAvatar
 import pk.paksoft.pos.core.designsystem.component.enterStagger
-import pk.paksoft.pos.core.designsystem.component.pressScale
 import pk.paksoft.pos.core.designsystem.icon.PosIcons
 import pk.paksoft.pos.core.designsystem.motion.PosSharedResize
 import pk.paksoft.pos.core.designsystem.motion.posSharedBounds
@@ -54,6 +47,7 @@ import pk.paksoft.pos.core.designsystem.motion.posSharedElement
 import pk.paksoft.pos.core.designsystem.motion.shopAvatarKey
 import pk.paksoft.pos.core.designsystem.motion.shopCardKey
 import pk.paksoft.pos.core.designsystem.motion.shopNameKey
+import pk.paksoft.pos.core.designsystem.theme.PosLayout
 import pk.paksoft.pos.core.designsystem.theme.PosSpacing
 import pk.paksoft.pos.core.designsystem.theme.PosTheme
 import pk.paksoft.pos.core.designsystem.theme.ShopBrand
@@ -93,7 +87,7 @@ fun LoginScreen(state: LoginUiState, onAction: (LoginAction) -> Unit) {
                 state = state,
                 onAction = onAction,
                 modifier = Modifier
-                    .widthIn(max = MaxContentWidth)
+                    .widthIn(max = PosLayout.formMaxWidth)
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
                     .padding(horizontal = PosSpacing.l, vertical = PosSpacing.xl),
@@ -116,13 +110,12 @@ private fun ShopHeader(state: LoginUiState, brand: ShopBrand, onSwitchShop: () -
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            // Off while a login runs or has just succeeded: switching then would end the session being created.
-            IconAction(
+            PosIconButton(
                 icon = PosIcons.Back,
                 contentDescription = stringResource(Res.string.login_switch_shop),
-                tint = colors.onContainer,
-                enabled = !state.isSubmitting,
                 onClick = onSwitchShop,
+                enabled = state.canChangeShop,
+                tint = colors.onContainer,
             )
         }
         ShopAvatar(brand, HeaderAvatarSize, Modifier.posSharedElement(shopAvatarKey(state.shopId)))
@@ -169,14 +162,13 @@ private fun LoginForm(state: LoginUiState, onAction: (LoginAction) -> Unit, modi
             passwordVisible = state.passwordVisible,
             enabled = !state.isSubmitting,
             trailing = {
-                IconAction(
+                PosIconButton(
                     icon = if (state.passwordVisible) PosIcons.VisibilityOff else PosIcons.Visibility,
                     contentDescription = stringResource(
                         if (state.passwordVisible) Res.string.login_hide_password else Res.string.login_show_password,
                     ),
-                    tint = LocalContentColor.current,
-                    enabled = !state.isSubmitting,
                     onClick = { onAction(LoginAction.TogglePasswordVisibility) },
+                    enabled = !state.isSubmitting,
                 )
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
@@ -202,34 +194,8 @@ private fun LoginForm(state: LoginUiState, onAction: (LoginAction) -> Unit, modi
     }
 }
 
-/**
- * A Material icon button (48 dp touch target, ripple) in [tint] with the icon-button squeeze. Disabled, it ignores
- * taps and dims its icon the Material way.
- */
-@Composable
-private fun IconAction(
-    icon: ImageVector,
-    contentDescription: String,
-    tint: Color,
-    onClick: () -> Unit,
-    enabled: Boolean = true,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    IconButton(
-        onClick = onClick,
-        modifier = Modifier.pressScale(interactionSource, ICON_PRESSED_SCALE),
-        enabled = enabled,
-        colors = IconButtonDefaults.iconButtonColors(contentColor = tint),
-        interactionSource = interactionSource,
-    ) {
-        Icon(icon, contentDescription = contentDescription)
-    }
-}
-
-private val MaxContentWidth = 420.dp
 private val HeaderAvatarSize = 84.dp
 private val HeaderShape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
-private const val ICON_PRESSED_SCALE = 0.88f
 
 private val SmfState = LoginUiState(
     shopId = "smf",

@@ -73,12 +73,9 @@ class LoginViewModel(private val session: SessionRepository) : ViewModel() {
         }
     }
 
-    /**
-     * Ignored while a login runs or has just succeeded (the button stays loading while home takes over): switching
-     * then would end the session being created.
-     */
+    /** Ignored unless [LoginUiState.canChangeShop]: switching during a login would end the session being created. */
     private fun changeShop() {
-        if (_state.value.isSubmitting) return
+        if (!_state.value.canChangeShop) return
         viewModelScope.launch { session.switchShop() }
     }
 

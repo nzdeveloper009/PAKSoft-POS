@@ -1,8 +1,11 @@
 package pk.paksoft.pos.app
 
+import androidx.compose.animation.EnterExitState
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 import pk.paksoft.pos.core.model.SessionNotice
 import pk.paksoft.pos.core.model.SessionState
 import pk.paksoft.pos.core.testing.TestData
@@ -76,5 +79,17 @@ class SessionTransitionsTest {
             sessionContentKey(SessionState.LoggedOut(TestData.smf, notice = null)),
             sessionContentKey(SessionState.LoggedOut(TestData.local, notice = null)),
         )
+    }
+
+    @Test
+    fun `a screen animating out takes no input`() {
+        // AnimatedContent targets PostExit for the leaving screen: a second tap there must not act again.
+        assertFalse(sessionScreenTakesInput(EnterExitState.PostExit))
+    }
+
+    @Test
+    fun `the screen coming in or staying takes input`() {
+        // Entering content targets Visible from its first frame; an interrupted exit retargets Visible too.
+        assertTrue(sessionScreenTakesInput(EnterExitState.Visible))
     }
 }

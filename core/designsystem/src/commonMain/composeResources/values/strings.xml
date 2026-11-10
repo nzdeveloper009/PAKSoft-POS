@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="retry">Retry</string>
+    <!-- Read by TalkBack / VoiceOver after a button's label while its work runs ("Log in, Working"). -->
+    <string name="button_working">Working</string>
 </resources>

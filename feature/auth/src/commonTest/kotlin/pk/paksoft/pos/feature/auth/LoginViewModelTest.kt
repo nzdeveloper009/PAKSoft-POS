@@ -203,4 +203,25 @@ class LoginViewModelTest {
         vm.onAction(ChangeShop)
         assertEquals(0, fake.switchShopCalls)
     }
+
+    @Test fun `the back arrow and system back change shop only while no login runs`() = runTest {
+        val vm = newVm()
+        assertTrue(vm.state.value.canChangeShop)
+        val gate = CompletableDeferred<Unit>()
+        fake.loginGate = gate
+        fake.loginResult = AppResult.Failure(AppError.Offline)
+        vm.fill()
+        vm.onAction(Submit)
+        assertFalse(vm.state.value.canChangeShop)
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.canChangeShop)
+    }
+
+    @Test fun `back stays off after a successful login while home takes over`() = runTest {
+        val vm = newVm()
+        vm.fill()
+        vm.onAction(Submit)
+        assertFalse(vm.state.value.canChangeShop)
+    }
 }

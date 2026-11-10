@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -35,12 +32,25 @@ import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import pk.paksoft.pos.core.designsystem.icon.PosIcons
 import pk.paksoft.pos.core.designsystem.theme.LocalPosMotion
 import pk.paksoft.pos.core.designsystem.theme.PosSpacing
+
+/**
+ * How far a tappable surface squeezes while pressed ([pressScale], [posClickable]): the smaller the target, the
+ * deeper the squeeze, so the movement reads the same at every size.
+ */
+object PosPressScale {
+    /** Large cards (a shop card, an action card). */
+    val card = 0.97f
+
+    /** Buttons, chips and other mid-sized controls. */
+    val control = 0.95f
+
+    /** Icon buttons ([PosIconButton]). */
+    val icon = 0.88f
+}
 
 /**
  * Shrinks the element to [pressedScale] while [interactionSource] reports a press (`fastEffects`) and springs
@@ -48,19 +58,22 @@ import pk.paksoft.pos.core.designsystem.theme.PosSpacing
  *
  * Put it before the element's clip and background so the whole surface scales.
  */
-fun Modifier.pressScale(interactionSource: InteractionSource, pressedScale: Float = 0.95f): Modifier =
-    this then PressScaleElement(interactionSource, pressedScale)
+fun Modifier.pressScale(
+    interactionSource: InteractionSource,
+    pressedScale: Float = PosPressScale.control,
+): Modifier = this then PressScaleElement(interactionSource, pressedScale)
 
 /**
  * A ripple plus [pressScale] sharing one interaction source: the press feel for any custom tappable surface.
  * Pass the surface's [shape]: it is clipped inside the scale, so the shape, its background and the ripple shrink
  * together. Put the background after this modifier: `Modifier.posClickable(shape = shape) { }.background(color)`.
- * Large cards keep the default 0.97; smaller targets pass 0.95, icon buttons 0.88 with `CircleShape`.
+ * Large cards keep the default [PosPressScale.card]; smaller targets pass [PosPressScale.control]. An icon button
+ * is [PosIconButton].
  */
 @Composable
 fun Modifier.posClickable(
     enabled: Boolean = true,
-    pressedScale: Float = 0.97f,
+    pressedScale: Float = PosPressScale.card,
     shape: Shape = RectangleShape,
     role: Role? = null,
     onClick: () -> Unit,
@@ -184,11 +197,20 @@ private fun PosClickableSample() {
         Box(
             modifier = Modifier
                 .padding(top = PosSpacing.l)
-                .size(48.dp)
-                .posClickable(pressedScale = 0.88f, shape = CircleShape, role = Role.Button, onClick = {}),
-            contentAlignment = Alignment.Center,
+                .posClickable(
+                    pressedScale = PosPressScale.control,
+                    shape = MaterialTheme.shapes.medium,
+                    role = Role.Button,
+                    onClick = {},
+                )
+                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .padding(horizontal = PosSpacing.l, vertical = PosSpacing.m),
         ) {
-            Icon(PosIcons.Refresh, contentDescription = null)
+            Text(
+                "Smaller target",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
         }
     }
 }
