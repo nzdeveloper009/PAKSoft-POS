@@ -33,6 +33,7 @@ import pk.paksoft.pos.core.ui.asString
 import pk.paksoft.pos.feature.auth.resources.Res
 import pk.paksoft.pos.feature.auth.resources.login_button
 import pk.paksoft.pos.feature.auth.resources.login_change_shop
+import pk.paksoft.pos.feature.auth.resources.login_demo_hint
 import pk.paksoft.pos.feature.auth.resources.login_error_password_required
 import pk.paksoft.pos.feature.auth.resources.login_field_login
 import pk.paksoft.pos.feature.auth.resources.login_field_password
@@ -92,6 +93,13 @@ fun LoginScreen(state: LoginUiState, onAction: (LoginAction) -> Unit) {
                     loading = state.isSubmitting,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                if (state.isDemoShop) {
+                    Text(
+                        stringResource(Res.string.login_demo_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 TextButton(
                     onClick = { onAction(LoginAction.ChangeShop) },
                     modifier = Modifier.align(Alignment.CenterHorizontally),

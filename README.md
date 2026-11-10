@@ -108,7 +108,7 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 17)
 open iosApp/iosApp.xcodeproj               # run on an iOS simulator from Xcode
 ```
 
-Debug builds include two dev shops: **Staging** (`https://pbsf.org.pk/smf-staging/api/v1`) and **Local API** (a server on your machine at port 8010: `10.0.2.2` from the Android emulator, `127.0.0.1` from the iOS simulator; plain HTTP is allowed only to these local addresses, only in debug builds). **Never test write actions (sales, payments, ledger edits) against a production shop.**
+Debug builds include three dev shops: **Demo shop** (answered inside the app by a debug-only network engine, so it needs no server and any username and password work; it signs in with sample data so screens can be looked at without touching a real shop), **Staging** (`https://pbsf.org.pk/smf-staging/api/v1`) and **Local API** (a server on your machine at port 8010: `10.0.2.2` from the Android emulator, `127.0.0.1` from the iOS simulator; plain HTTP is allowed only to these local addresses, only in debug builds). **Never test write actions (sales, payments, ledger edits) against a production shop.**
 
 ## Roadmap
 

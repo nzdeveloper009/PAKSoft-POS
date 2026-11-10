@@ -429,7 +429,7 @@ class DefaultSessionRepositoryTest {
     @Test
     fun `shops come from the build's catalog`() = runTest {
         val repo = repo()
-        assertEquals(listOf("smf", "bsf", "mummyandme", "staging", "local"), repo.shops.map { it.id })
+        assertEquals(listOf("smf", "bsf", "mummyandme", "demo", "staging", "local"), repo.shops.map { it.id })
         assertEquals(config.localApiBaseUrl, repo.shops.last().apiBaseUrl)
     }
 }

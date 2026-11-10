@@ -15,6 +15,8 @@ import io.ktor.util.AttributeKey
 import kotlinx.serialization.json.Json
 import pk.paksoft.pos.core.datastore.AppPreferences
 import pk.paksoft.pos.core.model.AppConfig
+import pk.paksoft.pos.core.network.demo.DemoAwareEngine
+import pk.paksoft.pos.core.network.demo.DemoServer
 
 /** Mark a request (login) that must not carry an `Authorization` header. */
 val SkipAuth: AttributeKey<Boolean> = AttributeKey("SkipAuth")
@@ -48,7 +50,7 @@ fun createPosHttpClient(
     tokens: AuthTokenProvider,
     prefs: AppPreferences,
     config: AppConfig,
-): HttpClient = HttpClient(engine) {
+): HttpClient = HttpClient(if (config.isDebug) DemoAwareEngine(engine, DemoServer()) else engine) {
     expectSuccess = false
     install(ContentNegotiation) { json(json) }
     install(HttpTimeout) {

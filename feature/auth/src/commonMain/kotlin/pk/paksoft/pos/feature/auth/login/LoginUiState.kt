@@ -4,6 +4,7 @@ import pk.paksoft.pos.core.ui.UiText
 
 data class LoginUiState(
     val shopName: String = "",
+    val isDemoShop: Boolean = false,
     val login: String = "",
     val password: String = "",
     val passwordVisible: Boolean = false,

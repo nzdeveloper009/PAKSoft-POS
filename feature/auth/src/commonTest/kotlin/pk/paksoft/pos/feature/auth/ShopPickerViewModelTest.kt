@@ -26,7 +26,7 @@ class ShopPickerViewModelTest {
     @Test fun `lists every shop with dev flag`() = runTest {
         val vm = ShopPickerViewModel(fake)
         val shops = vm.state.value.shops
-        assertEquals(listOf("smf", "bsf", "mummyandme", "staging", "local"), shops.map { it.id })
+        assertEquals(listOf("smf", "bsf", "mummyandme", "demo", "staging", "local"), shops.map { it.id })
         assertTrue(shops.first { it.id == "local" }.isDevelopment)
         assertEquals(false, shops.first { it.id == "smf" }.isDevelopment)
     }

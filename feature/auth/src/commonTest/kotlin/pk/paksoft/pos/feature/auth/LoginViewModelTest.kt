@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.setMain
 import pk.paksoft.pos.core.common.AppError
 import pk.paksoft.pos.core.common.AppResult
 import pk.paksoft.pos.core.model.SessionNotice
+import pk.paksoft.pos.core.model.Shops
 import pk.paksoft.pos.core.model.SessionState
 import pk.paksoft.pos.core.testing.FakeSessionRepository
 import pk.paksoft.pos.core.testing.TestData
@@ -54,6 +55,12 @@ class LoginViewModelTest {
 
     @Test fun `shows the shop name`() = runTest {
         assertEquals("Super Madina Solar Fan", newVm().state.value.shopName)
+    }
+
+    @Test fun `demo shop shows the demo hint`() = runTest {
+        assertEquals(false, newVm().state.value.isDemoShop)
+        fake = FakeSessionRepository(initial = SessionState.LoggedOut(Shops.demo, null))
+        assertEquals(true, newVm().state.value.isDemoShop)
     }
 
     @Test fun `blank fields show errors and do not call login`() = runTest {

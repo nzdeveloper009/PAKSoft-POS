@@ -86,7 +86,7 @@ Rules:
 - **`Money`**: `@JvmInline value class Money(val paisa: Long)`; arithmetic, `times(Double)` with **half-up rounding to 2 decimals** (to match the web's `toFixed(2)`, `DOMAIN.md` §5), `fromString("7998.00")`, `toPlainString()`. **Never `Double` for money** outside the calculator's internal steps.
 - Quantities and rates are `Double` (the server stores doubles; quantities can be fractional with units like `/ 12`).
 - Enums mirror `DOMAIN.md` §3 and always have an `Unknown` entry for forward compatibility.
-- `Shop(id, displayName, apiBaseUrl, webBaseUrl)`; `Shops.all` is a hard-coded list (+ staging in debug builds).
+- `Shop(id, displayName, apiBaseUrl, isDevelopment)`; `Shops.production` is a hard-coded list, and `Shops.forBuild(isDebug, localApiBaseUrl)` adds Demo, Staging and Local in debug builds.
 
 ### 4.2 Errors (`core:common`)
 
@@ -150,6 +150,7 @@ interface SalesRepository {
   - `HttpTimeout` (connect 15 s, request 30 s, socket 30 s; uploads 120 s per request when they arrive) and `expectSuccess = false` (`ApiCaller` maps the status)
   - Base URL resolved **per request** from the active shop: `ApiEndpoint.url(path)` asks `ActiveShopProvider`, so nothing is baked into the client and switching shop needs no new client
   - One custom plugin, `PosHeaders`, sets `Accept`, `Accept-Language`, `User-Agent`, `X-Device-Id` and `Authorization: Bearer <token>` on every request, reading the token from `AuthTokenProvider` each time (no caching, so switching shop or logging out takes effect immediately); requests carrying the `SkipAuth` attribute (login) get no `Authorization` header. A `401` → `AppError.Unauthenticated`; no refresh (Sanctum tokens don't refresh)
+  - Debug builds wrap the engine in `DemoAwareEngine` (`core:network/demo`): requests to the reserved host `demo.paksoft.invalid` (the Demo shop) are answered in-app by `DemoServer` with invented data (`auth/login`, `auth/logout`, `me`, `bootstrap`; anything else is a `not_found` envelope); every other request goes to the real engine. Release builds never wrap it.
   - `Logging` only in debug builds, at `LogLevel.INFO` (URL, method and status; never bodies) with `sanitizeHeader { it == HttpHeaders.Authorization }`
 - DTOs: `@Serializable` data classes with `@SerialName("snake_case")` on every property; money fields use `MoneySerializer` (string ↔ `Money`).
 - One API class per area (`AuthApi`, `BootstrapApi`, `CatalogApi`, `CustomerApi`, `SalesApi`, `CashRegisterApi`, `LedgerApi`), each a thin `@Singleton` wrapper returning `AppResult<Dto>`.

@@ -13,4 +13,5 @@
     <string name="login_change_shop">Change shop</string>
     <string name="login_error_login_required">Enter your username or email.</string>
     <string name="login_error_password_required">Enter your password.</string>
+    <string name="login_demo_hint">Demo shop: any username and password work.</string>
 </resources>

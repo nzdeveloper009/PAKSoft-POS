@@ -13,6 +13,7 @@ import pk.paksoft.pos.core.common.AppResult
 import pk.paksoft.pos.core.data.SessionRepository
 import pk.paksoft.pos.core.model.SessionNotice
 import pk.paksoft.pos.core.model.SessionState
+import pk.paksoft.pos.core.model.Shops
 import pk.paksoft.pos.core.ui.UiText
 import pk.paksoft.pos.core.ui.toUiText
 import pk.paksoft.pos.feature.auth.resources.Res
@@ -43,6 +44,7 @@ class LoginViewModel(private val session: SessionRepository) : ViewModel() {
         _state.update {
             it.copy(
                 shopName = loggedOut.shop.displayName,
+                isDemoShop = loggedOut.shop.id == Shops.DEMO_ID,
                 login = if (sameShop) it.login else "",
                 password = "",
                 isSubmitting = false,
