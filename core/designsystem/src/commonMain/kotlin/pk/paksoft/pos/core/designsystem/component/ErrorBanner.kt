@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,14 +15,16 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
+import pk.paksoft.pos.core.designsystem.icon.PosIcons
 import pk.paksoft.pos.core.designsystem.resources.Res
 import pk.paksoft.pos.core.designsystem.resources.retry
 import pk.paksoft.pos.core.designsystem.theme.PosSpacing
-import pk.paksoft.pos.core.designsystem.theme.PosTheme
 
-/** Inline error message. [onRetry] adds a retry action; its label defaults to the `retry` string resource. */
+/**
+ * Inline error message on the error container, with an error mark so it doesn't rely on colour alone.
+ * [onRetry] adds a tonal retry button; its label defaults to the `retry` string resource.
+ */
 @Composable
 fun ErrorBanner(
     message: String,
@@ -36,23 +38,39 @@ fun ErrorBanner(
             .semantics { liveRegion = LiveRegionMode.Polite },
         color = MaterialTheme.colorScheme.errorContainer,
         contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        shape = MaterialTheme.shapes.small,
+        shape = MaterialTheme.shapes.medium,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = PosSpacing.m, vertical = PosSpacing.s),
+            modifier = Modifier.padding(
+                start = PosSpacing.l,
+                end = if (onRetry != null) PosSpacing.s else PosSpacing.l,
+                top = PosSpacing.m,
+                bottom = PosSpacing.m,
+            ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(PosSpacing.s),
+            horizontalArrangement = Arrangement.spacedBy(PosSpacing.m),
         ) {
+            Icon(PosIcons.Error, contentDescription = null)
             Text(message, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            if (onRetry != null) TextButton(onClick = onRetry) { Text(retryLabel) }
+            if (onRetry != null) PosButton(text = retryLabel, onClick = onRetry, style = PosButtonStyle.Tonal)
         }
     }
 }
 
 @Preview
 @Composable
-private fun ErrorBannerPreview() {
-    PosTheme {
-        ErrorBanner(message = "No internet connection.", onRetry = {}, modifier = Modifier.padding(16.dp))
-    }
+private fun ErrorBannerLightPreview() {
+    PosPreview(darkTheme = false) { ErrorBanner(message = "No internet connection.", onRetry = {}) }
+}
+
+@Preview
+@Composable
+private fun ErrorBannerDarkPreview() {
+    PosPreview(darkTheme = true) { ErrorBanner(message = "No internet connection.", onRetry = {}) }
+}
+
+@Preview
+@Composable
+private fun ErrorBannerNoRetryPreview() {
+    PosPreview(darkTheme = false) { ErrorBanner(message = "The username/email or password is incorrect.") }
 }

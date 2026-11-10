@@ -61,7 +61,6 @@ fun posTypography(): Typography {
     )
 }
 
-@Composable
 internal fun posTypographyExtras(typography: Typography): PosTypographyExtras = PosTypographyExtras(
     moneyLarge = typography.displaySmall.copy(fontFeatureSettings = TABULAR_FIGURES),
     moneyMedium = typography.titleLarge.copy(fontFeatureSettings = TABULAR_FIGURES),

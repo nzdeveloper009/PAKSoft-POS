@@ -1,5 +1,8 @@
 package pk.paksoft.pos.core.designsystem.theme
 
+import androidx.compose.animation.core.InfiniteRepeatableSpec
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.SnapSpec
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.TweenSpec
@@ -50,5 +53,15 @@ class PosMotionTest {
         val m = PosMotion(reduced = false)
         assertEquals(50, m.staggerStepMillis)
         assertEquals(18f, m.enterOffset.value)
+        assertEquals(18, m.rollingStaggerMillis)
+    }
+
+    @Test
+    fun `shimmer is a linear restarting loop`() {
+        val spec = assertIs<InfiniteRepeatableSpec<Float>>(PosMotion(reduced = false).shimmer<Float>())
+        assertEquals(RepeatMode.Restart, spec.repeatMode)
+        val tween = assertIs<TweenSpec<Float>>(spec.animation)
+        assertEquals(1200, tween.durationMillis)
+        assertEquals(LinearEasing, tween.easing)
     }
 }

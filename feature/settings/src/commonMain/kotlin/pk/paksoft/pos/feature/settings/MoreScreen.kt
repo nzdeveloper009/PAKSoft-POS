@@ -18,7 +18,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.resources.stringResource
 import pk.paksoft.pos.core.designsystem.component.ErrorBanner
-import pk.paksoft.pos.core.designsystem.component.PosOutlinedButton
+import pk.paksoft.pos.core.designsystem.component.PosButton
+import pk.paksoft.pos.core.designsystem.component.PosButtonStyle
 import pk.paksoft.pos.core.designsystem.component.PosTopBar
 import pk.paksoft.pos.core.designsystem.theme.PosSpacing
 import pk.paksoft.pos.core.designsystem.theme.PosTheme
@@ -63,15 +64,17 @@ fun MoreScreen(state: MoreUiState, onAction: (MoreAction) -> Unit) {
                         )
                     }
                 }
-                PosOutlinedButton(
+                PosButton(
                     text = stringResource(Res.string.more_refresh),
                     onClick = { onAction(MoreAction.RefreshData) },
+                    style = PosButtonStyle.Outlined,
                     enabled = !state.isRefreshing,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                PosOutlinedButton(
+                PosButton(
                     text = stringResource(Res.string.more_switch_shop),
                     onClick = { onAction(MoreAction.SwitchShop) },
+                    style = PosButtonStyle.Outlined,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedButton(

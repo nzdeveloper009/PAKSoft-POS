@@ -1,6 +1,10 @@
 package pk.paksoft.pos.core.designsystem.theme
 
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.InfiniteRepeatableSpec
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -15,6 +19,9 @@ class PosMotion(val reduced: Boolean) {
     val staggerStepMillis: Int = 50
     val enterOffset: Dp = 18.dp
 
+    /** Delay between neighbouring digits of a rolling number, right-most digit first. */
+    val rollingStaggerMillis: Int = 18
+
     fun <T> fastSpatial(): FiniteAnimationSpec<T> = spatialSpring(0.6f, 800f)
     fun <T> spatial(): FiniteAnimationSpec<T> = spatialSpring(0.8f, 380f)
     fun <T> slowSpatial(): FiniteAnimationSpec<T> = spatialSpring(0.8f, 200f)
@@ -28,6 +35,10 @@ class PosMotion(val reduced: Boolean) {
     /** Numbers counting up. Decorative: callers skip the count when [reduced]. */
     fun <T> countUp(): FiniteAnimationSpec<T> = effectsSpring(1.0f, 120f)
 
+    /** One sweep of the skeleton shimmer. Callers draw a static block instead when [reduced]. */
+    fun <T> shimmer(): InfiniteRepeatableSpec<T> =
+        infiniteRepeatable(tween(SHIMMER_MILLIS, easing = LinearEasing), RepeatMode.Restart)
+
     private fun <T> spatialSpring(damping: Float, stiffness: Float): FiniteAnimationSpec<T> =
         if (reduced) snap() else spring(damping, stiffness)
 
@@ -36,5 +47,6 @@ class PosMotion(val reduced: Boolean) {
 
     private companion object {
         const val REDUCED_FADE_MILLIS = 120
+        const val SHIMMER_MILLIS = 1200
     }
 }

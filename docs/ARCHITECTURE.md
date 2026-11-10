@@ -386,13 +386,15 @@ Phase 1 look (spec: `docs/superpowers/specs/2026-11-10-phase1-look-and-motion-de
 | Extended colours | `PosTheme.colors` (`PosExtendedColors`) | `due`, `dueContainer`/`onDueContainer`, `paidContainer`/`onPaidContainer`, `chartIn`, `chartOut` |
 | Type | `MaterialTheme.typography` + `PosTheme.typography` (`moneyLarge/Medium/Small`, tabular figures) | Nunito variable, weights 400-900 |
 | Shape | `MaterialTheme.shapes` (`PosShapes`: 8/12/16/24/28 dp) | |
-| Motion | `PosTheme.motion` (`PosMotion`) | spring tokens `fastSpatial`, `spatial`, `slowSpatial`, `fastEffects`, `effects`, `slowEffects`, `bouncy`, `countUp`; `staggerStepMillis`, `enterOffset`. Reads the OS reduce-motion setting through `rememberReduceMotion()` (`expect`/`actual`): spatial specs snap, effects become a 120 ms tween |
+| Motion | `PosTheme.motion` (`PosMotion`) | spring tokens `fastSpatial`, `spatial`, `slowSpatial`, `fastEffects`, `effects`, `slowEffects`, `bouncy`, `countUp`; `shimmer()` loop; `staggerStepMillis`, `enterOffset`, `rollingStaggerMillis`. Reads the OS reduce-motion setting through `rememberReduceMotion()` (`expect`/`actual`): spatial specs snap, effects become a 120 ms tween |
 | Shop identity | `ShopBrand.forShop(id, displayName)` and `ShopBrand.colors()` | initials, `ShopShape` (`polygon()` gives the `MaterialShapes` polygon) and light/dark colour pairs for `smf`, `bsf`, `mummyandme`, `demo`, other. Shown on the shop card, login header and signed-in header only; buttons, charts and money stay green |
 
 - **Font:** Nunito (the web's font), bundled in `core:designsystem/src/commonMain/composeResources/font/`.
 - Spacing scale 4/8/12/16/24/32 dp.
 - Every colour, duration, easing and spring goes through `PosTheme`; no literals in feature code.
-- Components to build first: `PosTopBar`, `PosButton`, `PaymentButton`, `StatusBadge`, `MoneyText`, `KpiTile` (dashboard), `SearchField` (with scan action), `ProductTile` (POS grid), `CartLineRow`, `EmptyState`, `ErrorBanner`, `LoadingState`.
+- Built (`component/`, `icon/`): `PosButton(style = Filled | Charge | Tonal | Outlined | Text, large, loading, icon)` (shape morph and squeeze on press; `loading` narrows it into a circle with `PosLoadingIndicator`), `PosFilterChip`, `ShopAvatar(brand, size)`, `RollingText` (odometer digits), `animateCountAsState`, `SkeletonBox` / `Modifier.skeleton(visible)`, `PosTextField`, `PosTopBar`, `EmptyState(title, message, icon)`, `ErrorBanner`, `LoadingState`, and `PosIcons` (the only icon source for features).
+- Press feel for custom tappable surfaces: `Modifier.posClickable(pressedScale) { }` (ripple + `pressScale`; clip to the shape first); `Modifier.pressScale(interactionSource)` for components that own an interaction source. Entrances: `Modifier.enterStagger(index)`. Under reduced motion the squeeze, the entrance, the roll and the count are skipped and the final state shows at once.
+- Components still to build: `StatusBadge`, `MoneyText`, `KpiTile` (dashboard), `SearchField` (with scan action), `ProductTile` (POS grid), `CartLineRow`.
 
 ## 13. Formatting
 

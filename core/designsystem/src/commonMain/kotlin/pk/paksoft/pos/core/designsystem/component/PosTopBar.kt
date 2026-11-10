@@ -2,6 +2,8 @@ package pk.paksoft.pos.core.designsystem.component
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -9,8 +11,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import pk.paksoft.pos.core.designsystem.theme.PosTheme
+import pk.paksoft.pos.core.designsystem.icon.PosIcons
 
+/** A screen's top bar on the background colour, with a bold headline title. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PosTopBar(
@@ -19,7 +22,7 @@ fun PosTopBar(
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     TopAppBar(
-        title = { Text(title) },
+        title = { Text(title, style = MaterialTheme.typography.headlineSmall) },
         modifier = modifier,
         actions = actions,
         colors = TopAppBarDefaults.topAppBarColors(
@@ -30,10 +33,22 @@ fun PosTopBar(
     )
 }
 
+@Composable
+private fun PosTopBarSample() {
+    PosTopBar(
+        title = "More",
+        actions = { IconButton(onClick = {}) { Icon(PosIcons.Refresh, contentDescription = null) } },
+    )
+}
+
 @Preview
 @Composable
-private fun PosTopBarPreview() {
-    PosTheme {
-        PosTopBar(title = "More")
-    }
+private fun PosTopBarLightPreview() {
+    PosPreview(darkTheme = false) { PosTopBarSample() }
+}
+
+@Preview
+@Composable
+private fun PosTopBarDarkPreview() {
+    PosPreview(darkTheme = true) { PosTopBarSample() }
 }

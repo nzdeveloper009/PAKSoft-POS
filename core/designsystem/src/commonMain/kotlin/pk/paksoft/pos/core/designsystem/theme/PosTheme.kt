@@ -4,6 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -11,11 +12,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 
 private val LocalPosExtendedColors = staticCompositionLocalOf { PosLightExtendedColors }
-private val LocalPosMotion = staticCompositionLocalOf { PosMotion(reduced = false) }
+/** Internal so modifier nodes can read it with `currentValueOf`; everything else uses [PosTheme.motion]. */
+internal val LocalPosMotion = staticCompositionLocalOf { PosMotion(reduced = false) }
 private val LocalPosIsDark = staticCompositionLocalOf { false }
-private val LocalPosTypographyExtras = staticCompositionLocalOf<PosTypographyExtras> {
-    error("PosTheme is not set")
-}
+private val LocalPosTypographyExtras = staticCompositionLocalOf { posTypographyExtras(Typography()) }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -26,7 +26,7 @@ fun PosTheme(
     val reduced = rememberReduceMotion()
     val motion = remember(reduced) { PosMotion(reduced) }
     val typography = posTypography()
-    val extras = posTypographyExtras(typography)
+    val extras = remember(typography) { posTypographyExtras(typography) }
     CompositionLocalProvider(
         LocalPosExtendedColors provides if (darkTheme) PosDarkExtendedColors else PosLightExtendedColors,
         LocalPosMotion provides motion,
