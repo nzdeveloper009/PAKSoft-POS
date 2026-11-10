@@ -20,6 +20,16 @@ fun sessionScreen(state: SessionState): SessionScreen = when (state) {
 }
 
 /**
+ * The gate's `AnimatedContent` content key: a new screen, or the login of another shop, animates; a refreshed session
+ * or a notice does not. A plain String on purpose: Compose keys saved state by the key's hashCode, and a String's is
+ * the same in every process, while an enum's (also inside a Pair) changes, losing saved state after process death.
+ */
+fun sessionContentKey(state: SessionState): String {
+    val screen = sessionScreen(state).name
+    return if (state is SessionState.LoggedOut) "$screen:${state.shop.id}" else screen
+}
+
+/**
  * Leaving the start-up screen and arriving home fade through (no direction to show); otherwise moving deeper
  * (picker → login) is shared axis forward and moving shallower (log out, change shop) is shared axis back.
  */

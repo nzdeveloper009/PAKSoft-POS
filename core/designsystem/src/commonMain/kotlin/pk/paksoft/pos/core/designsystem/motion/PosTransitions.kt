@@ -12,6 +12,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import pk.paksoft.pos.core.designsystem.theme.PosMotion
 
@@ -20,7 +21,8 @@ import pk.paksoft.pos.core.designsystem.theme.PosMotion
  * become the short tween). The session gate and `NavDisplay` both use them; none sets a size transform.
  *
  * - Shared axis X (push / pop, log in to a shop, log out): the incoming screen slides 40 dp and fades in with
- *   `spatial`; the outgoing one slides 40 dp the same way and fades out with `fastEffects`.
+ *   `spatial`; the outgoing one slides 40 dp the same way with `spatial` (so it snaps with reduced motion) and fades
+ *   out with `fastEffects`.
  * - Fade through (login → home, tab switches): the outgoing screen fades out with `fastEffects`; the incoming one
  *   fades in and scales 0.94 → 1 with `spatial`.
  * - Predictive back: the previous screen comes in as on the way back while the leaving one shrinks to 0.9 and
@@ -51,8 +53,8 @@ object PosTransitions {
         val distance = with(density) { SharedAxisDistance.roundToPx() }
         return ContentTransform(
             targetContentEnter = slideInHorizontally(motion.spatial()) { distance } + fadeIn(motion.spatial()),
-            initialContentExit = slideOutHorizontally(motion.fastEffects()) { -distance } +
-                fadeOut(motion.fastEffects()),
+            initialContentExit = slideOutHorizontally(outgoingSlideSpec(motion)) { -distance } +
+                fadeOut(outgoingFadeSpec(motion)),
             sizeTransform = null,
         )
     }
@@ -62,8 +64,8 @@ object PosTransitions {
         val distance = with(density) { SharedAxisDistance.roundToPx() }
         return ContentTransform(
             targetContentEnter = sharedAxisBackEnter(motion, distance),
-            initialContentExit = slideOutHorizontally(motion.fastEffects()) { distance } +
-                fadeOut(motion.fastEffects()),
+            initialContentExit = slideOutHorizontally(outgoingSlideSpec(motion)) { distance } +
+                fadeOut(outgoingFadeSpec(motion)),
             sizeTransform = null,
         )
     }
@@ -72,7 +74,7 @@ object PosTransitions {
     fun fadeThrough(motion: PosMotion): ContentTransform = ContentTransform(
         targetContentEnter = fadeIn(motion.spatial()) +
             scaleIn(motion.spatial(), initialScale = FadeThroughInitialScale),
-        initialContentExit = fadeOut(motion.fastEffects()),
+        initialContentExit = fadeOut(outgoingFadeSpec(motion)),
         sizeTransform = null,
     )
 
@@ -99,6 +101,12 @@ object PosTransitions {
         durationMillis = motion.gestureMillis
         1f at (motion.gestureMillis * PREDICTIVE_BACK_OPAQUE_SHARE).toInt()
     }
+
+    /** The outgoing screen moves on `spatial`, so with reduced motion it snaps instead of sliding. */
+    internal fun outgoingSlideSpec(motion: PosMotion): FiniteAnimationSpec<IntOffset> = motion.spatial()
+
+    /** The outgoing screen fades quickly (`fastEffects`), out of the way of the incoming one. */
+    internal fun outgoingFadeSpec(motion: PosMotion): FiniteAnimationSpec<Float> = motion.fastEffects()
 
     private fun sharedAxisBackEnter(motion: PosMotion, distance: Int): EnterTransition =
         slideInHorizontally(motion.spatial()) { -distance } + fadeIn(motion.spatial())

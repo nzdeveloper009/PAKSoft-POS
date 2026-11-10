@@ -2,6 +2,8 @@ package pk.paksoft.pos.app
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import pk.paksoft.pos.core.model.SessionNotice
 import pk.paksoft.pos.core.model.SessionState
 import pk.paksoft.pos.core.testing.TestData
 
@@ -45,5 +47,34 @@ class SessionTransitionsTest {
         SessionScreen.entries.forEach { to ->
             assertEquals(SessionTransition.FadeThrough, sessionTransition(SessionScreen.Starting, to), "Starting -> $to")
         }
+    }
+
+    @Test
+    fun `content key is a plain string so saved state survives process death`() {
+        // A Pair or an enum inside one hashes by identity, which changes every process; a String hashes by content.
+        assertEquals("Starting", sessionContentKey(SessionState.Starting))
+        assertEquals("ShopPicker", sessionContentKey(SessionState.NoShop))
+        assertEquals("Login:smf", sessionContentKey(SessionState.LoggedOut(TestData.smf, notice = null)))
+        assertEquals("Home", sessionContentKey(SessionState.LoggedIn(TestData.smf, TestData.userSession())))
+    }
+
+    @Test
+    fun `a refreshed session or a notice keeps the content key`() {
+        assertEquals(
+            sessionContentKey(SessionState.LoggedIn(TestData.smf, TestData.userSession(name = "a"))),
+            sessionContentKey(SessionState.LoggedIn(TestData.smf, TestData.userSession(name = "b"))),
+        )
+        assertEquals(
+            sessionContentKey(SessionState.LoggedOut(TestData.smf, notice = null)),
+            sessionContentKey(SessionState.LoggedOut(TestData.smf, SessionNotice.SessionExpired)),
+        )
+    }
+
+    @Test
+    fun `another shop gets its own login content key`() {
+        assertNotEquals(
+            sessionContentKey(SessionState.LoggedOut(TestData.smf, notice = null)),
+            sessionContentKey(SessionState.LoggedOut(TestData.local, notice = null)),
+        )
     }
 }

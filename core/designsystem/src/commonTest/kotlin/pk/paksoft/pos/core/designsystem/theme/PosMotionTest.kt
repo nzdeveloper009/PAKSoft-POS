@@ -74,9 +74,9 @@ class PosMotionTest {
     }
 
     @Test
-    fun `reduced motion shortens the gesture spec to the effects tween`() {
+    fun `reduced motion makes the gesture spec snap`() {
         val m = PosMotion(reduced = true)
-        assertEquals(120, assertIs<TweenSpec<Float>>(m.gesture<Float>()).durationMillis)
-        assertEquals(120, m.gestureMillis)
+        assertIs<SnapSpec<*>>(m.gesture<Float>())
+        assertEquals(0, m.gestureMillis)
     }
 }

@@ -45,8 +45,8 @@ fun App(vm: AppViewModel = koinViewModel()) {
                             .contentTransform(motion, density)
                     },
                     label = "sessionGate",
-                    // A new screen, or the login of another shop, animates; a refreshed session or notice does not.
-                    contentKey = { sessionScreen(it) to (it as? SessionState.LoggedOut)?.shop?.id },
+                    // A String key, stable across processes, so saved state under the gate survives process death.
+                    contentKey = ::sessionContentKey,
                 ) { current ->
                     CompositionLocalProvider(
                         LocalSharedTransitionScope provides this@SharedTransitionLayout,

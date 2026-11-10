@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -84,7 +85,10 @@ private val RailMinWidth = 600.dp
 @Composable
 fun MainScaffold(session: UserSession, vm: MainViewModel = koinViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val destinations = visibleDestinations(session.permissions, state.settings?.features?.ledger ?: false)
+    // Logging out clears the shop data before the session ends, while this screen is still animating out: keep the
+    // last settings so the bar doesn't lose its Ledger tab mid-exit.
+    val settings = rememberLastNonNull(state.settings)
+    val destinations = visibleDestinations(session.permissions, settings?.features?.ledger ?: false)
     val backStack = rememberNavBackStack(navSavedStateConfig, DashboardKey)
     val selected = selectedDestination(backStack)
 
@@ -107,6 +111,18 @@ fun MainScaffold(session: UserSession, vm: MainViewModel = koinViewModel()) {
     ) {
         MainNavDisplay(backStack)
     }
+}
+
+/** [value], or the last non-null value it had while this call stays composed. */
+@Composable
+private fun <T : Any> rememberLastNonNull(value: T?): T? {
+    val last = remember { LastValue<T>() }
+    SideEffect { if (value != null) last.value = value }
+    return value ?: last.value
+}
+
+private class LastValue<T : Any> {
+    var value: T? = null
 }
 
 /**
